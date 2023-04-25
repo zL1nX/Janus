@@ -1,0 +1,70 @@
+/*
+ * Copyright (C) 2011-2021 Intel Corporation. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of Intel Corporation nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+
+// Enclave1.cpp : Defines the exported functions for the .so application
+#include "sgx_eid.h"
+#include "EnclaveInitiator_t.h"
+#include "EnclaveMessageExchange.h"
+#include "error_codes.h"
+#include "Utility_E1.h"
+#include "sgx_utils.h"
+#include <map>
+
+#define UNUSED(val) (void)(val)
+
+#define RESPONDER_PRODID 1
+
+std::map<sgx_enclave_id_t, janus_session_t>g_src_session_info_map;
+
+janus_session_t g_session;
+
+/* Function Description:
+ *   This is ECALL routine to create JANUS session.
+ *   When it succeeds to create JANUS session, the session context is saved in g_session.
+ * */
+extern "C" uint32_t test_create_session()
+{
+        return create_session(&g_session);
+}
+
+/* Function Description:
+ *   This is ECALL interface to close secure session*/
+uint32_t test_close_session()
+{
+    ATTESTATION_STATUS ke_status = SUCCESS;
+
+    ke_status = close_session(&g_session);
+
+    //Erase the session context
+    memset(&g_session, 0, sizeof(janus_session_t));
+    return ke_status;
+}

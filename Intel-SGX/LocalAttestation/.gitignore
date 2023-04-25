@@ -1,0 +1,14 @@
+bin/*
+AppInitiator/*.o
+AppInitiator/*_u*
+AppResponder/*.o
+AppResponder/*_u*
+EnclaveInitiator/*.o
+EnclaveInitiator/*.pem
+EnclaveInitiator/*.so
+EnclaveInitiator/*_t*
+EnclaveResponder/*.o
+EnclaveResponder/*.pem
+EnclaveResponder/*.so
+EnclaveResponder/*_t*
+util/*.o
