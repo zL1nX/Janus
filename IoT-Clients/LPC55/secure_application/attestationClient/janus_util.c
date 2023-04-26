@@ -76,3 +76,17 @@ int calculate_hashed_measurement(uint8_t* out, uint8_t* puf_measurement, uint8_t
 //     // b6a558837172015cb1e9e88c95ca88906133e3d25d401b4cefed0f50990e45bc || 242d6f3e3ed2aecac4e0869bf8eb1ee07c2e73a010f3800d8b5d37bc28889253aad2e529d0bcb7d1 || 00 ==> 7556872ddb3addf91955731a3ea721d1cd54d5cbac58990f2af5c8bfc9391c27
 //     return 0;
 // }
+
+/*
+decrypt the secret key on chain
+Enc_{Kg}(si)
+Note that the "in" buffer is also the result, avoid additional memory allocation.
+*/
+
+int decrypt_onchain_secret(uint8_t* in, uint8_t* key)
+{
+    struct AES_ctx ctx;
+    AES_init_ctx(&ctx, key);
+    AES_ECB_decrypt(&ctx, in);
+    return 0;
+}
