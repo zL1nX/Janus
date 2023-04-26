@@ -8,3 +8,6 @@
 // error code
 #define SUCCESS 0x00
 #define ERROR_UNEXPECTED 0xF1
+
+
+#define SIGNATURE_SIZE 64
