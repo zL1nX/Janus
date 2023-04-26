@@ -1,0 +1,3 @@
+#define NONCE_LEN 20
+#define MEASUREMENT_LEN 32
+#define ID_LEN 40
