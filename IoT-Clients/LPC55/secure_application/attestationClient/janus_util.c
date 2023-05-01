@@ -37,7 +37,7 @@ int calculate_hashed_measurement(uint8_t* out, uint8_t* puf_measurement, uint8_t
 
     Sha256Initialise(&ctx);
     Sha256Update(&ctx, puf_measurement, MEASUREMENT_LEN);
-    Sha256Update(&ctx, id, ID_LEN);
+    Sha256Update(&ctx, id, JANUS_ID_LEN);
     if(pid >= 0) // pid is valid
     {
         Sha256Update(&ctx, &pid, 1);
@@ -88,5 +88,20 @@ int decrypt_onchain_secret(uint8_t* in, uint8_t* key)
     struct AES_ctx ctx;
     AES_init_ctx(&ctx, key);
     AES_ECB_decrypt(&ctx, in);
+    return 0;
+}
+
+uint64_t generate_timestamp()
+{
+    return 1470918308;
+}
+
+int sign_all()
+{
+    return 0;
+}
+
+int initClient()
+{
     return 0;
 }
