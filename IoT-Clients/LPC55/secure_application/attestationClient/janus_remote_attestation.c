@@ -43,12 +43,6 @@ int construct_payload(uint8_t* payload, const size_t payload_len, const uint8_t*
     return SUCCESS;
 }
 
-int construct_signature(uint8_t* signature_buf, const size_t start, const uint8_t* private_key)
-{
-
-    return SUCCESS;
-}
-
 int construct_CT_message(uint8_t* C, uint8_t* T, uint8_t* AN, const uint8_t* payload, const size_t payload_len, struct janus_msg_A* A, const uint8_t* commuication_key, bool with_nonce) {
     memset(C, 0, sizeof(*C));
     memset(T, 0, sizeof(*T));
@@ -116,7 +110,7 @@ int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_
     }
     if(round == 2 || round == 3)
     {
-        if(construct_signature(payload, payloadlen - SIGNATURE_SIZE, client->private_key) < 0)
+        if(generate_serialized_signature(payload, payloadlen - SIGNATURE_SIZE, payloadlen, client) < 0)
         {
             return ERROR_UNEXPECTED;
         }
@@ -151,7 +145,7 @@ int check_received_message(struct RemoteAttestationClient* client, janus_ra_msg_
     }
     if(round == 2 || round == 3)
     {
-        if(verify_all(client, payload, payloadlen) == false || verify_measurement() == false)
+        if(verify_signature(client, payload, payloadlen) == false || verify_measurement(client, payload, payloadlen, received_msg->A.id, received_msg->A.pid, g_measurement) == false)
         {
             return INVALID_MESSAGE;
         }

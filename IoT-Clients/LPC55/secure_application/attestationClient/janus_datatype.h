@@ -7,6 +7,8 @@
 #include "ascon.h"
 #include "hmac_sha256.h"
 #include "aes.h"
+#include "secp256k1_preallocated.h"
+#include "secp256k1.h"
 
 // protocol relevant
 #define JANUS_ID_LEN 40
@@ -32,7 +34,9 @@
 #define GEN_RANDOM_ERROR 0xF2
 #define INVALID_MESSAGE 0XF3
 
-
+#define SIG_PRIVKEY_SIZE 32
+#define SIG_PUBKEY_SIZE 33
+#define PUBKEY_SERIAL_SIZE 64
 #define SIGNATURE_SIZE 64
 
 typedef uint32_t ATTESTATION_STATUS;
@@ -49,6 +53,7 @@ struct RemoteAttestationClient {
     uint8_t personal_key[JANUS_COMM_KEY_LEN];
     uint8_t init_challenge[PUF_CHALLENGE_LEN];
     uint8_t session_key;
+    secp256k1_context* ctx;
     uint8_t *private_key; // sk 这里完了再说
     uint8_t *public_key; // pk
 };

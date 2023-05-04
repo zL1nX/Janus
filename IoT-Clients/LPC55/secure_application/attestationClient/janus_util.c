@@ -96,27 +96,100 @@ uint16_t generate_timestamp()
     return 1470918308;
 }
 
-int sign_all()
+int generate_serialized_signature(uint8_t* msg_sig_buf, const size_t current, size_t message_len, struct RemoteAttestationClient* client)
 {
-    return 0;
+    uint8_t signature_buffer[SIGNATURE_SIZE];
+    uint8_t unsigned_message[current];
+    secp256k1_ecdsa_signature signature;
+
+	secp256k1_ecdsa_sign(client->ctx, &signature, unsigned_message, client->private_key, NULL, NULL);
+
+    // serialize
+	uint8_t der_of_signature[SIGNATURE_SIZE];
+	secp256k1_ecdsa_signature_serialize_compact(client->ctx, der_of_signature, &signature);
+
+    // append the serialized signature after the payload
+    memcpy(msg_sig_buf + current, der_of_signature, SIGNATURE_SIZE);
+
+    return SUCCESS;
 }
 
-bool verify_all()
+bool verify_signature(struct RemoteAttestationClient* client, uint8_t* payload, size_t payloadlen)
 {
+    size_t message_len = payloadlen - SIGNATURE_SIZE;
+    uint8_t* message[message_len];
+    secp256k1_ecdsa_signature signature;
+    memcpy(message, payload, message_len);
+
+    if(secp256k1_ecdsa_signature_parse_compact(client->ctx, &signature, payload + message_len) == 0)
+    {
+        return false;
+    }
+    if(secp256k1_ecdsa_verify(client->ctx, &signature, message, client->public_key) == 0)
+    {
+        return false;
+    }
     return true;
 }
 
-bool verify_measurement()
+bool verify_measurement(struct RemoteAttestationClient* client, const uint8_t* payload, size_t payloadlen, const uint8_t* id, const uint8_t pid, const uint8_t* g_measurement)
 {
-    return true;
+    uint8_t cal_measurement[MEASUREMENT_LEN];
+    size_t measure_start = (payloadlen == (SIGNATURE_SIZE + MEASUREMENT_LEN)) ? 0 : MEASUREMENT_LEN;
+    if(calculate_hashed_measurement(cal_measurement, g_measurement, id, pid) < 0)
+    {
+        return false;
+    }
+    bool res = memcmp(cal_measurement, payload + measure_start, MEASUREMENT_LEN);
+    return res;
 }
 
-int initClient(struct RemoteAttestationClient* client, int role)
+int initClientSign(struct RemoteAttestationClient* client)
+{
+    uint8_t private_key[SIG_PRIVKEY_SIZE];
+	strncpy((char*) private_key, (char*) client->private_key, SIG_PRIVKEY_SIZE);
+
+	secp256k1_context *ctx = NULL;
+	ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY | SECP256K1_CONTEXT_SIGN);
+
+	int result = secp256k1_ec_seckey_verify(ctx, private_key);
+
+	printf("init sign: %d", result);
+
+    if(!result)
+    {
+        return ERROR_UNEXPECTED;
+    }
+
+    // 先只管私钥签名, 公钥完了再说
+
+	// secp256k1_pubkey public_key;
+	// result = secp256k1_ec_pubkey_create(ctx, &public_key, private_key);
+
+	// uint8_t public_key_serialized[PUBKEY_SERIAL_SIZE];
+	// size_t length = sizeof(public_key);
+
+	// result = secp256k1_ec_pubkey_serialize(ctx, public_key_serialized, &length, &public_key, SECP256K1_EC_COMPRESSED);
+
+	// client->public_key = malloc(SIG_PUBKEY_SIZE);
+
+	// strncpy((char*) client->public_key, (char*) public_key_serialized, length);
+
+	// result = secp256k1_ec_pubkey_parse(client->ctx, &public_key, client->public_key, length);
+
+	client->ctx = ctx;
+
+	//client->address = assembleAddress(client->public_key, PUBLIC_KEY_SIZE);
+    return SUCCESS;
+}
+
+int initClient(struct RemoteAttestationClient* client, int role, const uint8_t* priv_key)
 {
     uint8_t cid[JANUS_ID_LEN];
     size_t cur = 0;
 
     client->role = role;
+    client->private_key = priv_key;
     if(role == IS_ATTESTER)
     {
         memcpy(client->id + cur, ATT_ADDRESS, SHA256_HASH_SIZE); cur += SHA256_HASH_SIZE;
@@ -128,6 +201,10 @@ int initClient(struct RemoteAttestationClient* client, int role)
         memcpy(client->id + cur, SPN, 4); cur += 4;
     }
     memcpy(client->id + cur, GROUP_ID, 4); cur += 4;
+    if(initClientSign(client) < 0)
+    {
+        return ERROR_UNEXPECTED;
+    }
     return SUCCESS;
 }
 
