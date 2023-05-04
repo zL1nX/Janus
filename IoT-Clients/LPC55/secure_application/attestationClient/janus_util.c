@@ -91,7 +91,7 @@ int decrypt_onchain_secret(uint8_t* in, uint8_t* key)
     return 0;
 }
 
-uint64_t generate_timestamp()
+uint16_t generate_timestamp()
 {
     return 1470918308;
 }
@@ -101,7 +101,55 @@ int sign_all()
     return 0;
 }
 
-int initClient()
+bool verify_all()
 {
-    return 0;
+    return true;
+}
+
+bool verify_measurement()
+{
+    return true;
+}
+
+int initClient(struct RemoteAttestationClient* client, int role)
+{
+    uint8_t cid[JANUS_ID_LEN];
+    size_t cur = 0;
+
+    client->role = role;
+    if(role == IS_ATTESTER)
+    {
+        memcpy(client->id + cur, ATT_ADDRESS, SHA256_HASH_SIZE); cur += SHA256_HASH_SIZE;
+        memcpy(client->id + cur, DSN, 4); cur += 4;
+    }
+    else
+    {
+        memcpy(client->id + cur, VRF_ADDRESS, SHA256_HASH_SIZE); cur += SHA256_HASH_SIZE;
+        memcpy(client->id + cur, SPN, 4); cur += 4;
+    }
+    memcpy(client->id + cur, GROUP_ID, 4); cur += 4;
+    return SUCCESS;
+}
+
+size_t get_A_buffer_len(bool with_nonce)
+{
+    size_t tssize = 2;
+    size_t aux_len = JANUS_ID_LEN + tssize + 1;
+    if(with_nonce)
+    {
+        aux_len += JANUS_NONCE_LEN;
+    }
+    return aux_len;
+}
+
+int A_message_buffering(uint8_t* buffer, const struct janus_msg_A* A, bool with_nonce)
+{
+    memcpy(buffer, A->id, JANUS_ID_LEN);
+    buffer[JANUS_ID_LEN] = A->pid;
+    memcpy(buffer + JANUS_ID_LEN + 1, &(A->timestamp), sizeof(A->timestamp));
+    if(with_nonce)
+    {
+        memcpy(buffer + JANUS_ID_LEN + 1 + sizeof(A->timestamp), &(A->nonce), JANUS_NONCE_LEN);
+    }
+    return SUCCESS;
 }

@@ -19,6 +19,12 @@
 #define IS_ATTESTER 0
 #define IS_VERIFIER 1
 
+#define ATT_ADDRESS "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
+#define VRF_ADDRESS "8bb0cf6eb9b17d0f7d22b456f121257dc1254e1f01665370476383ea776df414"
+#define DSN "0001"
+#define SPN "0002"
+#define GROUP_ID "0003"
+
 
 // error code
 #define SUCCESS 0x00
@@ -39,12 +45,10 @@ typedef enum {
 
 struct RemoteAttestationClient {
     int role;
-    uint8_t address[SHA256_HASH_SIZE];
-    uint8_t serialno[4];
-    uint8_t groupid[4];
     uint8_t id[JANUS_ID_LEN];
     uint8_t personal_key[JANUS_COMM_KEY_LEN];
     uint8_t init_challenge[PUF_CHALLENGE_LEN];
+    uint8_t session_key;
     uint8_t *private_key; // sk 这里完了再说
     uint8_t *public_key; // pk
 };
@@ -60,6 +64,7 @@ struct janus_msg_A {
 typedef struct _janus_ra_msg  {
     struct janus_msg_A A;
     uint8_t T[ASCON_AEAD_TAG_MIN_SECURE_LEN]; // ASCON Tag
+    uint8_t AN[ASCON_AEAD_NONCE_LEN]; // AEAD NONCE
     uint8_t C[]; // flexible array member, a legal operation in C99
 } janus_ra_msg_t;
 
