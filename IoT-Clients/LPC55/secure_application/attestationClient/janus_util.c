@@ -142,8 +142,7 @@ bool verify_signature(struct RemoteAttestationClient* client, uint8_t* payload, 
 bool verify_measurement(struct RemoteAttestationClient* client, const uint8_t* payload, size_t payloadlen, const uint8_t* A, const uint8_t* stored_meas)
 {
     uint8_t cal_measurement[MEASUREMENT_LEN];
-    size_t measure_start = (payloadlen == (SIGNATURE_SIZE + PUF_MEASUREMENT_LEN)) ? 0 : MEASUREMENT_LEN;
-    if(calculate_hashed_measurement(cal_measurement, payload + measure_start, A, A[JANUS_ID_LEN]) < 0)
+    if(calculate_hashed_measurement(cal_measurement, payload, A, A[JANUS_ID_LEN]) < 0)
     {
         return false;
     }
