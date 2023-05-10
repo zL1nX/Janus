@@ -1,3 +1,4 @@
+#include "test_function.h"
 #include "janus_util.h"
 
 /*
@@ -30,18 +31,16 @@ int generate_random_array(uint8_t* random, size_t random_len)
 verify the RM through calculating the hash output
 H(RM || id || pid), pid is optional, id is aid or vid.
 */
-int calculate_hashed_measurement(uint8_t* out, uint8_t* puf_measurement, uint8_t* id, uint8_t pid)
+int calculate_hashed_measurement(uint8_t* out, const uint8_t* puf_measurement, const uint8_t* id, uint8_t pid)
 {
     Sha256Context ctx;
     SHA256_HASH hash;
 
     Sha256Initialise(&ctx);
-    Sha256Update(&ctx, puf_measurement, MEASUREMENT_LEN);
+    Sha256Update(&ctx, puf_measurement, PUF_MEASUREMENT_LEN);
     Sha256Update(&ctx, id, JANUS_ID_LEN);
-    if(pid >= 0) // pid is valid
-    {
-        Sha256Update(&ctx, &pid, 1);
-    }
+    Sha256Update(&ctx, &pid, 1);
+    
     Sha256Finalise(&ctx, &hash);
     memcpy(out, hash.bytes, SHA256_HASH_SIZE);
     return 0;
@@ -93,13 +92,16 @@ int decrypt_onchain_secret(uint8_t* in, uint8_t* key)
 
 uint16_t generate_timestamp()
 {
-    return 1470918308;
+    return (uint16_t)1470918308;
 }
 
-int generate_serialized_signature(uint8_t* msg_sig_buf, const size_t current, size_t message_len, struct RemoteAttestationClient* client)
+int generate_serialized_signature(uint8_t* msg_sig_buf, size_t message_len, struct RemoteAttestationClient* client)
 {
     uint8_t signature_buffer[SIGNATURE_SIZE];
-    uint8_t unsigned_message[current];
+    uint8_t unsigned_message[SHA256_HASH_SIZE]; // at least 32 bytes
+    memset(unsigned_message, 0, SHA256_HASH_SIZE);
+    memcpy(unsigned_message, msg_sig_buf, message_len);
+
     secp256k1_ecdsa_signature signature;
 
 	secp256k1_ecdsa_sign(client->ctx, &signature, unsigned_message, client->private_key, NULL, NULL);
@@ -107,17 +109,22 @@ int generate_serialized_signature(uint8_t* msg_sig_buf, const size_t current, si
     // serialize
 	uint8_t der_of_signature[SIGNATURE_SIZE];
 	secp256k1_ecdsa_signature_serialize_compact(client->ctx, der_of_signature, &signature);
-
     // append the serialized signature after the payload
-    memcpy(msg_sig_buf + current, der_of_signature, SIGNATURE_SIZE);
+    memcpy(msg_sig_buf + message_len, der_of_signature, SIGNATURE_SIZE);
 
     return SUCCESS;
 }
 
 bool verify_signature(struct RemoteAttestationClient* client, uint8_t* payload, size_t payloadlen)
 {
+    secp256k1_pubkey pubkey;
+    int result = secp256k1_ec_pubkey_parse(client->ctx, &pubkey, client->public_key, SIG_PUBKEY_SIZE);
+    // aprint(client->public_key, SIG_PUBKEY_SIZE, "public key");
+    //result = secp256k1_ec_pubkey_parse(client->ctx, &public_key, client->public_key, length);
+
     size_t message_len = payloadlen - SIGNATURE_SIZE;
-    uint8_t* message[message_len];
+    uint8_t message[SHA256_HASH_SIZE];
+    memset(message, 0, SHA256_HASH_SIZE);
     secp256k1_ecdsa_signature signature;
     memcpy(message, payload, message_len);
 
@@ -125,22 +132,23 @@ bool verify_signature(struct RemoteAttestationClient* client, uint8_t* payload, 
     {
         return false;
     }
-    if(secp256k1_ecdsa_verify(client->ctx, &signature, message, client->public_key) == 0)
-    {
+    if(secp256k1_ecdsa_verify(client->ctx, &signature, message, &pubkey) == 0)
+    {   
         return false;
     }
     return true;
 }
 
-bool verify_measurement(struct RemoteAttestationClient* client, const uint8_t* payload, size_t payloadlen, const uint8_t* id, const uint8_t pid, const uint8_t* g_measurement)
+bool verify_measurement(struct RemoteAttestationClient* client, const uint8_t* payload, size_t payloadlen, const uint8_t* A, const uint8_t* stored_meas)
 {
     uint8_t cal_measurement[MEASUREMENT_LEN];
-    size_t measure_start = (payloadlen == (SIGNATURE_SIZE + MEASUREMENT_LEN)) ? 0 : MEASUREMENT_LEN;
-    if(calculate_hashed_measurement(cal_measurement, g_measurement, id, pid) < 0)
+    size_t measure_start = (payloadlen == (SIGNATURE_SIZE + PUF_MEASUREMENT_LEN)) ? 0 : MEASUREMENT_LEN;
+    if(calculate_hashed_measurement(cal_measurement, payload + measure_start, A, A[JANUS_ID_LEN]) < 0)
     {
         return false;
     }
-    bool res = memcmp(cal_measurement, payload + measure_start, MEASUREMENT_LEN);
+    bool res = memcmp(cal_measurement, stored_meas, MEASUREMENT_LEN) == 0;
+    // printf("comp %d\n", res);
     return res;
 }
 
@@ -154,30 +162,24 @@ int initClientSign(struct RemoteAttestationClient* client)
 
 	int result = secp256k1_ec_seckey_verify(ctx, private_key);
 
-	printf("init sign: %d", result);
-
-    if(!result)
-    {
-        return ERROR_UNEXPECTED;
-    }
+	printf("priv key valid: %d\n", result);
 
     // 先只管私钥签名, 公钥完了再说
 
-	// secp256k1_pubkey public_key;
-	// result = secp256k1_ec_pubkey_create(ctx, &public_key, private_key);
+	secp256k1_pubkey public_key;
+	result = secp256k1_ec_pubkey_create(ctx, &public_key, private_key);
 
-	// uint8_t public_key_serialized[PUBKEY_SERIAL_SIZE];
-	// size_t length = sizeof(public_key);
+	uint8_t public_key_serialized[PUBKEY_SERIAL_SIZE];
+	size_t length = sizeof(public_key);
 
-	// result = secp256k1_ec_pubkey_serialize(ctx, public_key_serialized, &length, &public_key, SECP256K1_EC_COMPRESSED);
+	result = secp256k1_ec_pubkey_serialize(ctx, public_key_serialized, &length, &public_key, SECP256K1_EC_COMPRESSED);
 
-	// client->public_key = malloc(SIG_PUBKEY_SIZE);
+	strncpy((char*) client->public_key, (char*) public_key_serialized, SIG_PUBKEY_SIZE);
 
-	// strncpy((char*) client->public_key, (char*) public_key_serialized, length);
-
-	// result = secp256k1_ec_pubkey_parse(client->ctx, &public_key, client->public_key, length);
+	result = secp256k1_ec_pubkey_parse(client->ctx, &public_key, client->public_key, SIG_PUBKEY_SIZE);
 
 	client->ctx = ctx;
+
 
 	//client->address = assembleAddress(client->public_key, PUBLIC_KEY_SIZE);
     return SUCCESS;
@@ -201,6 +203,7 @@ int initClient(struct RemoteAttestationClient* client, int role, const uint8_t* 
         memcpy(client->id + cur, SPN, 4); cur += 4;
     }
     memcpy(client->id + cur, GROUP_ID, 4); cur += 4;
+    
     if(initClientSign(client) < 0)
     {
         return ERROR_UNEXPECTED;

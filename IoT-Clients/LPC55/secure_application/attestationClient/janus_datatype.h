@@ -1,3 +1,6 @@
+#ifndef _JANUS_DATATYPE
+#define _JANUS_DATATYPE
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -7,22 +10,23 @@
 #include "ascon.h"
 #include "hmac_sha256.h"
 #include "aes.h"
-#include "secp256k1_preallocated.h"
-#include "secp256k1.h"
+#include "../janus/IoT-Clients/LPC55/secure_application/attestationClient/secp256k1_preallocated.h"
+#include "../janus/IoT-Clients/LPC55/secure_application/attestationClient/secp256k1.h"
 
 // protocol relevant
 #define JANUS_ID_LEN 40
 #define JANUS_NONCE_LEN  8
 #define JANUS_COMM_KEY_LEN 16
 #define MEASUREMENT_LEN  32
+#define PUF_MEASUREMENT_LEN 16
 #define PUF_CHALLENGE_LEN 16
 #define PUF_RESPONESE_LEN 16
 
 #define IS_ATTESTER 0
 #define IS_VERIFIER 1
 
-#define ATT_ADDRESS "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
-#define VRF_ADDRESS "8bb0cf6eb9b17d0f7d22b456f121257dc1254e1f01665370476383ea776df414"
+#define ATT_ADDRESS "953623c8b388b4459e13f978d7c846f4"
+#define VRF_ADDRESS "8bb0cf6eb9b17d0f7d22b456f121257d"
 #define DSN "0001"
 #define SPN "0002"
 #define GROUP_ID "0003"
@@ -54,8 +58,8 @@ struct RemoteAttestationClient {
     uint8_t init_challenge[PUF_CHALLENGE_LEN];
     uint8_t session_key;
     secp256k1_context* ctx;
-    uint8_t *private_key; // sk 这里完了再说
-    uint8_t *public_key; // pk
+    const uint8_t *private_key; // sk 这里完了再说
+    const uint8_t public_key[SIG_PUBKEY_SIZE]; // pk
 };
 
 struct janus_msg_A {
@@ -67,10 +71,13 @@ struct janus_msg_A {
 };
 
 typedef struct _janus_ra_msg  {
-    struct janus_msg_A A;
+    uint8_t* A;
     uint8_t T[ASCON_AEAD_TAG_MIN_SECURE_LEN]; // ASCON Tag
     uint8_t AN[ASCON_AEAD_NONCE_LEN]; // AEAD NONCE
-    uint8_t C[]; // flexible array member, a legal operation in C99
+    uint8_t* C; // flexible array 真坑 再也不用了
+    size_t alen, clen;
 } janus_ra_msg_t;
 
 // TODO: 128 or 256 ?
+
+#endif
