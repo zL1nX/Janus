@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+message Challenge {
+	string nonce = 1;   
+	string aid = 2;
+    string vid = 3;
+}
+
+message Report {
+	string payload = 1;
+    string aid = 2;
+}
+
+message AttResult {
+	uint32 result = 1;
+    string vid = 2;
+}

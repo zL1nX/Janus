@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+
+message AuditionRequest {
+    repeated string ssid = 1;   
+    uint32 flag = 2;
+    string audit_id = 3;
+}
+
+message Credential {
+    string credential = 1;
+    string id = 2;
+    string ssid = 3;
+}
+
+message AuditionResult {
+    uint32 result = 1;
+    string ssid = 2;
+}
