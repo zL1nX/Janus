@@ -40,15 +40,15 @@ import json
 
 from decimal import Decimal
 from colorlog import ColoredFormatter
-from janus_registration_transaction_family import AdministrationClient
+from registration_client import RegistrationClient
 
 # Initialize the key name
 KEY_NAME = 'registration'
 
 # hard-coded for simplicity (otherwise get the URL from the args in main):
-#DEFAULT_URL = 'http://localhost:8008'
+DEFAULT_URL = 'http://localhost:8008'
 # For Docker:
-DEFAULT_URL = 'http://rest-api:8008'
+# DEFAULT_URL = 'http://rest-api:8008'
 
 def create_console_handler(verbose_level):
     '''Setup console logging.'''
@@ -102,7 +102,7 @@ def create_parser(prog_name):
 def load_registration_info():
     '''Subcommand to load a new device database onto the blockchain.  Calls client class to do submission.'''
     privkeyfile = _get_private_keyfile(KEY_NAME) # 记得到yaml里改sawtooth命令, 使其和KEYNAME保持一致
-    client = AdministrationClient(base_url=DEFAULT_URL, key_file=privkeyfile)
+    client = RegistrationClient(base_url=DEFAULT_URL, key_file=privkeyfile)
     SerializedDeviceList = build_registration_list().SerializeToString()
     response = client.submitDevices(SerializedDeviceList)
     print("Devices Submission Result: {}".format(response))

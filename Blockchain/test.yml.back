@@ -17,6 +17,61 @@ version: "2.1"
 
 services:
 
+  # attmgr-processor:
+  #   container_name: attmgr-processor
+  #   build:
+  #     context: .
+  #     dockerfile: ./attestation_transaction_family/pyprocessor/Dockerfile
+  #     args:
+  #       - http_proxy
+  #       - https_proxy
+  #       - no_proxy
+  #   depends_on:
+  #     - validator
+  #   volumes:
+  #     - ".:/project/attestation_management/"
+
+  # erp:
+  #   container_name: erp
+  #   build:
+  #     context: .
+  #     dockerfile: ./attestation_transaction_family/pyclient/Dockerfile
+  #     args:
+  #       - http_proxy
+  #       - https_proxy
+  #       - no_proxy
+  #   environment:
+  #     - 'http_proxy=${http_proxy}'
+  #     - 'https_proxy=${https_proxy}'
+  #     - 'no_proxy=rest-api,validator,${no_proxy}'
+  #   volumes:
+  #     - ".:/project/attestation_management/"
+  #   depends_on:
+  #     - rest-api
+  #   entrypoint: "bash -c \"sawtooth keygen --force client1 && tail -f /dev/null\""
+  #   stop_signal: SIGKILL
+
+  # mes:
+  #   container_name: mes
+  #   build:
+  #     context: .
+  #     dockerfile: ./attestation_transaction_family/pyclient/Dockerfile
+  #     args:
+  #       - http_proxy
+  #       - https_proxy
+  #       - no_proxy
+  #   environment:
+  #     - 'http_proxy=${http_proxy}'
+  #     - 'https_proxy=${https_proxy}'
+  #     - 'no_proxy=rest-api,validator,${no_proxy}'
+  #   volumes:
+  #     - ".:/project/attestation_management/"
+  #   depends_on:
+  #     - rest-api
+  #   entrypoint: "bash -c \"sawtooth keygen --force client1 && tail -f /dev/null\""
+  #   stop_signal: SIGKILL
+
+
   registration-client:
     container_name: registration-client
     build:
@@ -54,6 +109,26 @@ services:
       - validator
     volumes:
       - ".:/project/attestation_management/"
+
+  # subscriber:
+  #   container_name: subscriber
+  #   build:
+  #     context: .
+  #     dockerfile: ./subscriber/Dockerfile
+  #     args:
+  #       - http_proxy
+  #       - https_proxy
+  #       - no_proxy
+  #   environment:
+  #     - 'http_proxy=${http_proxy}'
+  #     - 'https_proxy=${https_proxy}'
+  #     - 'no_proxy=rest-api,validator,${no_proxy}'
+  #   volumes:
+  #     - ".:/project/attestation_management/"
+  #   depends_on:
+  #     - rest-api
+  #   entrypoint: "bash -c \"sawtooth keygen --force client1 && tail -f /dev/null\""
+  #   stop_signal: SIGKILL
 
   settings-tp:
     image: hyperledger/sawtooth-settings-tp:1.0
@@ -147,3 +222,12 @@ services:
         cp ~/.sawtooth/keys/* /project/attestation_management/keys/root_keys/ &&\
         tail -f /dev/null \
         \""
+#   mqtt:
+#       image: toke/mosquitto
+#  #     network_mode: bridge
+#       container_name: broker
+#       expose:
+#         - 1883
+#       ports:
+#         - 1883:1883
+#       restart: unless-stopped
