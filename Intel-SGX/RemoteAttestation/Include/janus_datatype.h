@@ -46,7 +46,7 @@
 typedef uint32_t ATTESTATION_STATUS;
 
 typedef enum {
-    JANUS_RA_R1,
+    JANUS_RA_R1 = 1,
     JANUS_RA_R2,
     JANUS_RA_R3
 } JANUS_RA_ROUND;

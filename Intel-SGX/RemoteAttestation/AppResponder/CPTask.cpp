@@ -89,7 +89,7 @@ int process_round1(int clientfd, FIFO_MSGBODY_REQ *req_msg) {
                                  JANUS_RA_R1);
     if (ret != SGX_SUCCESS)
     {
-        printf("EnclaveResponder_verify_ra_msg error.\n");
+        printf("EnclaveResponder check_received_message error.\n");
         return -1;
     }
 
@@ -97,7 +97,7 @@ int process_round1(int clientfd, FIFO_MSGBODY_REQ *req_msg) {
     ret = construct_ra_challenge(e2_enclave_id, &status, &janus_msg, JANUS_RA_R2);
     if (ret != SGX_SUCCESS)
     {
-        printf("EnclaveResponder_verify_ra_msg error.\n");
+        printf("EnclaveResponder construct_ra_challenge error.\n");
         return -1;
     }
     memcpy(&session_msgresp.janus_msg, &janus_msg, sizeof(janus_ra_msg_t));
@@ -143,7 +143,7 @@ int process_round3(int clientfd, SESSION_MSG* msg) {
                                  JANUS_RA_R3);
     if (ret != SGX_SUCCESS)
     {
-        printf("EnclaveResponder_verify_ra_msg error.\n");
+        printf("EnclaveResponder check_received_message error.\n");
         return -1;
     }
 
@@ -185,12 +185,26 @@ void CPTask::run() {
     sgx_launch_token_t token = {0};
     sgx_status_t status;
     int update = 0;
+    uint32_t ret_status = 0;
+    int test_ret = 0;
 
     // load responder enclave
     status = sgx_create_enclave(ENCLAVE_RESPONDER_NAME, SGX_DEBUG_FLAG, &token, &update,
                                 &e2_enclave_id, NULL);
     if (status != SGX_SUCCESS) {
         printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_RESPONDER_NAME, status);
+        return;
+    }
+
+    status = test_func(e2_enclave_id, &test_ret);
+    if (status != SGX_SUCCESS) {
+        printf("verifier test_func error.\n");
+        return;
+    }
+
+    status = init_session(e2_enclave_id, &ret_status);
+    if (status != SGX_SUCCESS) {
+        printf("verifier init_session error.\n");
         return;
     }
 
@@ -211,7 +225,7 @@ void CPTask::run() {
                 msg = (FIFO_MSGBODY_REQ *)message->msgbuf;
 
                 if (process_round1(clientfd, msg) != 0) {
-                    printf("failed to process message transfer request.\n");
+                    printf("failed to process round 1 message transfer request.\n");
                     break;
                 }
             }
@@ -225,7 +239,7 @@ void CPTask::run() {
                 msg = (SESSION_MSG*)message->msgbuf;
 
                 if (process_round3(clientfd, msg) != 0) {
-                    printf("failed to process message transfer request.\n");
+                    printf("failed to process round 3 message transfer request.\n");
                     break;
                 }
             }

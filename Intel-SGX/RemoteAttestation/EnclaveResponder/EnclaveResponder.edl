@@ -34,8 +34,10 @@ enclave {
     include "sgx_eid.h"
     include "../Include/janus_session_protocol.h"
     trusted{
+            public uint32_t init_session(void);
             public uint32_t construct_ra_challenge([out] janus_ra_msg_t* janus_msg, int round);
             public uint32_t check_received_message([in] const janus_ra_msg_t* received_msg, int round);
+            public int test_func(void);
     };
 
     untrusted{

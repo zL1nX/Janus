@@ -162,7 +162,16 @@ ATTESTATION_STATUS test_create_session(sgx_enclave_id_t initiator_enclave_id) {
     uint32_t ret_status;
     uint32_t session_id;
 
-    sgx_status_t status = construct_ra_challenge(initiator_enclave_id, &ret_status, &msg1, JANUS_RA_R1);
+    sgx_status_t status = init_session(initiator_enclave_id, &ret_status);
+    if (status == SGX_SUCCESS) {
+        if ((ATTESTATION_STATUS)ret_status != SUCCESS)
+            return ((ATTESTATION_STATUS)ret_status);
+    }
+    else {
+        return ATTESTATION_SE_ERROR;
+    }
+
+    status = construct_ra_challenge(initiator_enclave_id, &ret_status, &msg1, JANUS_RA_R1);
     if (status == SGX_SUCCESS) {
         if ((ATTESTATION_STATUS)ret_status != SUCCESS)
             return ((ATTESTATION_STATUS)ret_status);

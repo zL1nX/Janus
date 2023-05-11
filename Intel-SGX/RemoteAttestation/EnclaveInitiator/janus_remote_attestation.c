@@ -7,7 +7,7 @@ const uint8_t g_hash_puf_measurement[MEASUREMENT_LEN] = {0xf0, 0x5b, 0x5b, 0xd6,
 uint8_t g_nonce[JANUS_NONCE_LEN]; // global nonce
 uint8_t g_payloadlen[4] = {0, 2 * JANUS_COMM_KEY_LEN, 2 * JANUS_COMM_KEY_LEN + SIGNATURE_SIZE, JANUS_COMM_KEY_LEN + SIGNATURE_SIZE};
 
-struct RemoteAttestationClient client = {0};
+extern struct RemoteAttestationClient g_client;
 
 int construct_A_message(uint8_t* A, const uint8_t* id, const uint8_t pid, bool with_nonce) {
     size_t cur = 0;
@@ -102,7 +102,7 @@ ATTESTATION_STATUS construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
     uint8_t pid = round == 1 ? 1 : 255;
     bool with_random = round == 3 ? false : true;
 
-    if(construct_A_message(A, client.id, pid, with_random) < 0)
+    if(construct_A_message(A, g_client.id, pid, with_random) < 0)
     {
         return ERROR_UNEXPECTED;
     }
@@ -112,13 +112,13 @@ ATTESTATION_STATUS construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
     }
     if(round == 2 || round == 3)
     {
-        if(generate_serialized_signature(payload, payloadlen - SIGNATURE_SIZE, &client) < 0)
+        if(generate_serialized_signature(payload, payloadlen - SIGNATURE_SIZE, &g_client) < 0)
         {
             return ERROR_UNEXPECTED;
         }
     }
 
-    if(construct_CT_message(C, T, AN, payload, payloadlen, A, alen, client.personal_key, true) < 0)
+    if(construct_CT_message(C, T, AN, payload, payloadlen, A, alen, g_client.personal_key, true) < 0)
     {
         return ERROR_UNEXPECTED;
     }
@@ -155,11 +155,11 @@ ATTESTATION_STATUS check_received_message(janus_ra_msg_t* received_msg, int roun
     if(round == 2 || round == 3)
     {
         // first get pubkey from somewhere, here its the client itself
-        if(verify_signature(&client, payload, payloadlen) == false)
+        if(verify_signature(&g_client, payload, payloadlen) == false)
         {
             return INVALID_MESSAGE;
         }
-        if(verify_measurement(&client, payload, payloadlen, received_msg->A, g_hash_puf_measurement) == false)
+        if(verify_measurement(&g_client, payload, payloadlen, received_msg->A, g_hash_puf_measurement) == false)
         {
             return INVALID_MESSAGE;
         }
