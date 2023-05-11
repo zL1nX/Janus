@@ -9,5 +9,5 @@ message Device {
 }
 
 message DevicesList {
-	repeated Device Device = 1;
+	repeated Device device_list = 1;
 }

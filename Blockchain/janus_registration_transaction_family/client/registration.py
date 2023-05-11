@@ -35,6 +35,7 @@ import traceback
 import csv
 import configparser
 import janus_device_pb2
+import json
 
 
 from decimal import Decimal
@@ -107,29 +108,26 @@ def load_registration_info():
     print("Devices Submission Result: {}".format(response))
 
 def build_registration_list():
-    # load csv file and add each Device to a DeviceList object
+    # load json file
+    l = janus_device_pb2.DevicesList()
 
-    DeviceList = janus_device_pb2.DevicesList()
+    with open('../registration_information/deviceinfo.json') as f:
+        info = json.load(f)
+        for (k, v) in info.items():
+            print(k, v)
+            device = build_device_pb(v)
+            l.device_list.extend([device])
+    return l
 
-    with open('../registration_information/DeviceDB.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            newDevice = make_device(row['id'], row['measurement'], row['pid'], row['encrypted_keys'], row['hardware_configs'])
-            DeviceList.Device.extend([newDevice])
-
-    return DeviceList
-
-def make_device(id, measurement, pid, encrypted_keys, hardware_configs):
-    # Build a Device object
-    newDevice = janus_device_pb2.Device(
-        id = id,
-        measurement = measurement,
-        pid = pid,
-        encrypted_keys = encrypted_keys,
-        hardware_configs = hardware_configs,
+def build_device_pb(d:dict):
+    device = janus_device_pb2.Device(
+        id = d["id"],
+        measurement = d["measurement"],
+        pid = d["pid"],
+        encrypted_keys = d["encrypted_keys"],
+        hardware_configs = d["hardware_configs"],
     )
-
-    return newDevice
+    return device
 
 
 # Fetch the private keyfile

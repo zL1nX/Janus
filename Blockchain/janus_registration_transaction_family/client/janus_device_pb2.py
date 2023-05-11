@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x12janus_device.proto\"\xbe\x01\n\x06\x44\x65vice\x12\n\n\x02id\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\x12\x0b\n\x03pid\x18\x03 \x01(\r\x12\x16\n\x0e\x65ncrypted_keys\x18\x04 \x03(\t\x12\x36\n\x10hardware_configs\x18\x05 \x03(\x0b\x32\x1c.Device.HardwareConfigsEntry\x1a\x36\n\x14HardwareConfigsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"&\n\x0b\x44\x65vicesList\x12\x17\n\x06\x44\x65vice\x18\x01 \x03(\x0b\x32\x07.Deviceb\x06proto3')
+  serialized_pb=_b('\n\x12janus_device.proto\"\xbe\x01\n\x06\x44\x65vice\x12\n\n\x02id\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\x12\x0b\n\x03pid\x18\x03 \x01(\r\x12\x16\n\x0e\x65ncrypted_keys\x18\x04 \x03(\t\x12\x36\n\x10hardware_configs\x18\x05 \x03(\x0b\x32\x1c.Device.HardwareConfigsEntry\x1a\x36\n\x14HardwareConfigsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"+\n\x0b\x44\x65vicesList\x12\x1c\n\x0b\x64\x65vice_list\x18\x01 \x03(\x0b\x32\x07.Deviceb\x06proto3')
 )
 
 
@@ -129,7 +129,7 @@ _DEVICESLIST = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='Device', full_name='DevicesList.Device', index=0,
+      name='device_list', full_name='DevicesList.device_list', index=0,
       number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -148,12 +148,12 @@ _DEVICESLIST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=215,
-  serialized_end=253,
+  serialized_end=258,
 )
 
 _DEVICE_HARDWARECONFIGSENTRY.containing_type = _DEVICE
 _DEVICE.fields_by_name['hardware_configs'].message_type = _DEVICE_HARDWARECONFIGSENTRY
-_DEVICESLIST.fields_by_name['Device'].message_type = _DEVICE
+_DEVICESLIST.fields_by_name['device_list'].message_type = _DEVICE
 DESCRIPTOR.message_types_by_name['Device'] = _DEVICE
 DESCRIPTOR.message_types_by_name['DevicesList'] = _DEVICESLIST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
