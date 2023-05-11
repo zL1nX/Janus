@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message Device {
+	string id = 1;   
+	string measurement =2;
+    uint32 pid = 3;
+    repeated string encrypted_keys = 4;
+    map<string, string> hardware_configs =5;
+}
+
+message DevicesList {
+	repeated Device device_list = 1;
+}

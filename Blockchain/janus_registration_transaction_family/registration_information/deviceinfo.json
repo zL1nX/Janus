@@ -1,0 +1,51 @@
+{
+    "attester1" : {
+        "id": "953623c8b388b4459e13f978d7c846f4",
+        "measurement": "953623c8b388b4459e13f978d7c846f4953623c8b388b4459e13f978d7c846f4",
+        "pid":1,
+        "encrypted_keys": ["953623c8b388b4459e13f978d7c846f4", "953623c8b388b4459e13f978d7c846f4", "953623c8b388b4459e13f978d7c846f4"],
+        "hardware_configs": {
+            "tee_manufacturer": "Intel",
+            "tee_version": "SGX 1.0",
+            "srot" : "PUF",
+            "CPUSVN" : "953623c8b388b4459e13f978d7c846f4" 
+        }
+    },
+    "attester2" : {
+        "id": "053623c8b388b4459e13f978d7c846f4",
+        "measurement": "053623c8b388b4459e13f978d7c846f4953623c8b388b4459e13f978d7c846f4",
+        "pid":2,
+        "encrypted_keys": ["053623c8b388b4459e13f978d7c846f4", "053623c8b388b4459e13f978d7c846f4", "053623c8b388b4459e13f978d7c846f4"],
+        "hardware_configs": {
+            "tee_manufacturer": "Intel",
+            "tee_version": "SGX 1.5",
+            "rot" : "None",
+            "CPUSVN" : "053623c8b388b4459e13f978d7c846f4" 
+        }
+    },
+    
+    "verifier1" : {
+        "id": "8bb0cf6eb9b17d0f7d22b456f121257d",
+        "measurement": "8bb0cf6eb9b17d0f7d22b456f121257d8bb0cf6eb9b17d0f7d22b456f121257d",
+        "pid":0,
+        "encrypted_keys": ["8bb0cf6eb9b17d0f7d22b456f121257d", "8bb0cf6eb9b17d0f7d22b456f121257d", "8bb0cf6eb9b17d0f7d22b456f121257d"],
+        "hardware_configs": {
+            "tee_manufacturer": "ARM",
+            "tee_version": "Trustzone",
+            "rot" : "None",
+            "CPUSVN" : "8bb0cf6eb9b17d0f7d22b456f121257d" 
+        }
+    },
+    "verifier2" : {
+        "id": "7bb0cf6eb9b17d0f7d22b456f121257d",
+        "measurement": "7bb0cf6eb9b17d0f7d22b456f121257d8bb0cf6eb9b17d0f7d22b456f121257d",
+        "pid":1,
+        "encrypted_keys": ["7bb0cf6eb9b17d0f7d22b456f121257d", "7bb0cf6eb9b17d0f7d22b456f121257d", "7bb0cf6eb9b17d0f7d22b456f121257d"],
+        "hardware_configs": {
+            "tee_manufacturer": "ARM",
+            "tee_version": "Trustzone",
+            "rot" : "TPM",
+            "CPUSVN" : "7bb0cf6eb9b17d0f7d22b456f121257d" 
+        }
+    }
+}

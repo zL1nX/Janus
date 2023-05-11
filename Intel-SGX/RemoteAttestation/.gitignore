@@ -1,0 +1,17 @@
+bin/*
+AppInitiator/*.o
+AppInitiator/*_u*
+AppResponder/*.o
+AppResponder/*_u*
+EnclaveInitiator/*.o
+EnclaveInitiator/*.pem
+EnclaveInitiator/*.so
+EnclaveInitiator/*_t*
+EnclaveResponder/*.o
+EnclaveResponder/*.pem
+EnclaveResponder/*.so
+EnclaveResponder/*_t*
+util/fifo/*.o
+util/crypto/*.o
+util/crypto/secp256k1/*.o
+util/*.o
