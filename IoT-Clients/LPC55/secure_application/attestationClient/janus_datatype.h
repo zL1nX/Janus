@@ -10,8 +10,8 @@
 #include "ascon.h"
 #include "hmac_sha256.h"
 #include "aes.h"
-#include "../janus/IoT-Clients/LPC55/secure_application/attestationClient/secp256k1_preallocated.h"
-#include "../janus/IoT-Clients/LPC55/secure_application/attestationClient/secp256k1.h"
+#include "secp256k1_preallocated.h"
+#include "secp256k1.h"
 
 // protocol relevant
 #define JANUS_ID_LEN 40
