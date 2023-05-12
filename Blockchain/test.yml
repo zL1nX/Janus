@@ -55,6 +55,43 @@ services:
     volumes:
       - ".:/project/attestation_management/"
 
+
+  attestation-client:
+    container_name: attestation-client
+    build:
+      context: .
+      dockerfile: ./janus_attestation_transaction_family/client/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    environment:
+      - 'http_proxy=${http_proxy}'
+      - 'https_proxy=${https_proxy}'
+      - 'no_proxy=rest-api,validator,${no_proxy}'
+    volumes:
+      - ".:/project/attestation_management/"
+    depends_on:
+      - rest-api
+    entrypoint: "bash -c \"sawtooth keygen --force att_client && tail -f /dev/null\""
+    stop_signal: SIGKILL
+
+
+  attestation-processor:
+    container_name: attestation-processor
+    build:
+      context: .
+      dockerfile: ./janus_attestation_transaction_family/contract/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    depends_on:
+      - validator
+    volumes:
+      - ".:/project/attestation_management/"
+
+
   settings-tp:
     image: hyperledger/sawtooth-settings-tp:1.0
     container_name: sawtooth-settings-tp-default
@@ -99,7 +136,7 @@ services:
     command: |
       bash -c "
         if [ ! -f /etc/keys/validator.priv ]; then
-        sawadm keygen &&
+        sawadm keygen --force &&
         sawset genesis \
           -k /etc/sawtooth/keys/validator.priv \
           -o config-genesis.batch &&
@@ -143,7 +180,7 @@ services:
     volumes:
       - ".:/project/attestation_management/"
     entrypoint: "bash -c \"\
-        sawtooth keygen && \
+        sawtooth keygen --force && \
         cp ~/.sawtooth/keys/* /project/attestation_management/keys/root_keys/ &&\
         tail -f /dev/null \
         \""
