@@ -1,4 +1,5 @@
 #include "janus_datatype.h"
+#include "puf_util.h"
 
 
 int generate_random_array(uint8_t* random, size_t random_len);
@@ -11,3 +12,4 @@ size_t get_A_buffer_len(bool with_nonce);
 int A_message_buffering(uint8_t* buffer, const struct janus_msg_A* A, bool with_nonce);
 bool verify_signature(struct RemoteAttestationClient* client, uint8_t* payload, size_t payloadlen);
 bool verify_measurement(struct RemoteAttestationClient* client, const uint8_t* payload, size_t payloadlen, const uint8_t* A, const uint8_t* g_measurement);
+int construct_measurement(uint8_t* out_measurement, uint8_t* in_measurement, serial_t* sr);

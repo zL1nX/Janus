@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "serial.h"
 #include "ascon.h"
 #include "hmac_sha256.h"
 #include "aes.h"
@@ -21,6 +22,8 @@
 #define PUF_MEASUREMENT_LEN 16
 #define PUF_CHALLENGE_LEN 16
 #define PUF_RESPONESE_LEN 16
+#define IPUF_CHALL 8
+#define IPUF_RESP 2
 
 #define IS_ATTESTER 0
 #define IS_VERIFIER 1
@@ -60,6 +63,7 @@ struct RemoteAttestationClient {
     secp256k1_context* ctx;
     const uint8_t *private_key; // sk 这里完了再说
     const uint8_t public_key[SIG_PUBKEY_SIZE]; // pk
+    serial_t* sr;
 };
 
 struct janus_msg_A {

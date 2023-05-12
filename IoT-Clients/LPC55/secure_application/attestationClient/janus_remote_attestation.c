@@ -87,18 +87,30 @@ int deconstruct_encrypted_payload(uint8_t* payload, const uint8_t* communication
 int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_t* janus_msg, int round)
 {
     //janus_msg = (janus_ra_msg_t*)malloc(sizeof(janus_ra_msg_t));
-
+    
     size_t payloadlen = g_payloadlen[round];
     size_t alen = JANUS_ID_LEN + 2 + 1;
     if(round == 2)
     {
         alen += JANUS_NONCE_LEN;
-    } 
-    uint8_t A[alen], payload[payloadlen], C[payloadlen], T[ASCON_AEAD_TAG_MIN_SECURE_LEN], AN[ASCON_AEAD_NONCE_LEN];
+    }
     
-    const uint8_t* measurement = round == 1 ? NULL: g_puf_measurement;
+    uint8_t A[alen], payload[payloadlen], C[payloadlen], T[ASCON_AEAD_TAG_MIN_SECURE_LEN], AN[ASCON_AEAD_NONCE_LEN];
     uint8_t pid = round == 1 ? 1 : 255;
     bool with_random = round == 3 ? false : true;
+
+    uint8_t real_puf_measurement[PUF_MEASUREMENT_LEN];
+    if(janus_puf_evaluate(client->sr, real_puf_measurement, g_measurement) != SUCCESS)
+    {
+        return ERROR_UNEXPECTED;
+    }
+    const uint8_t* measurement = round == 1 ? NULL: real_puf_measurement;
+    
+    // for(int i = 0; i < PUF_MEASUREMENT_LEN; i++)
+    // {
+    //     printf("%x ", real_puf_measurement[i]);
+    // }
+    // printf("\n");
     
     if(construct_A_message(A, client->id, pid, with_random) < 0)
     {
