@@ -26,6 +26,7 @@ AdministrationTransactionHandler class interfaces for Administration Transaction
 import traceback
 import sys
 import hashlib
+import json
 import logging
 import cbor
 
@@ -98,6 +99,10 @@ class AttestationTransactionHandler(TransactionHandler):
         if action == "submit_challenge":
             address = handle_attestation_challenge(context, payload)
             LOGGER.info("Devices Address = %s", address)
+        elif action == "submit_attestation_response":
+            address = handle_attestation_response(context, payload)
+        elif action == "submit_verification_request":
+            address = handle_verification_request(context, payload)
         else:
             LOGGER.info("Unhandled action. Action not legal!")
 
@@ -121,7 +126,6 @@ class AttestationTransactionHandler(TransactionHandler):
         return action, payload
 
 
-
 # Write the device database
 def handle_attestation_challenge(context, payload):
     l = janus_attestation_pb2.Challenge()
@@ -137,6 +141,47 @@ def handle_attestation_challenge(context, payload):
     LOGGER.info('The Attestation Challenge Nonce is stored')
     return addresses
 
+# Write the device database
+def handle_attestation_response(context, payload):
+    l = janus_attestation_pb2.Report()
+    l.ParseFromString(payload)
+
+    report = bytes.fromhex(l.payload) # set_state expects bytes 
+    aid = l.aid
+
+    address = _assembleAddress(aid) # 地址必须与提交时对应, 否则会unauthorized address
+    LOGGER.info('Report are saved at address: %s',
+                address)
+    addresses = context.set_state({address: report})
+    LOGGER.info('The Attestation Report is stored')
+    return addresses
+
+def handle_verification_request(context, payload):
+    l = janus_attestation_pb2.Verify()
+    l.ParseFromString(payload)
+
+    print(type(l.aid))
+    results = verify_response(context, l.aid).encode()
+
+    address = _assembleAddress(l.vid) # 地址必须与提交时对应, 否则会unauthorized address
+    LOGGER.info('Request is saved at address: %s',
+                address)
+    addresses = context.set_state({address: results})
+    LOGGER.info('The Verification Results is stored')
+
+    return addresses
+
+def verify_response(context, aidlist):
+    verify_results = {}
+    for id in aidlist:
+        target = _assembleAddress(id)
+        state_entries = context.get_state([target])
+        if state_entries == []:
+            LOGGER.info('No report for %s', id)
+            continue
+        print(state_entries[0].data)
+        verify_results[id] = True # perform verification here
+    return json.dumps(verify_results)
 
 # Assemble storage addresses
 def _assembleAddress(storage_target):

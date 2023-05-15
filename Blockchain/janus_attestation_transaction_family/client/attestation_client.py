@@ -122,20 +122,32 @@ class AttestationClient(object):
         address_list = [storageAddress] # only need this
         return self._wrap_and_send("submit_challenge", challenge, address_list, address_list, wait=10)
     
-  
-    def submitTrustQuery(self, payload):
-        '''Submit a Trust Query to validator.'''
-        # Access to administrative databases must be defined
-        administrationAddresses = [
-                                   '5a7526f43437fca1d5f3d0381073ed3eec9ae42bf86988559e98009795a969919cbeca',
-                                   '5a75264f03016f8dfef256580a4c6fdeeb5aa0ca8b4068e816a677e908c95b3bdd2150']
-        # Allow access to block-info data and the administration transaction family namespace
-        input_address_list = ['00b10c00', '00b10c01', 'fadc96']
-        input_address_list.extend(administrationAddresses)
-        output_address_list = ['00b10c00', '00b10c01', 'fadc96']
-        result = self._wrap_and_send("trustQuery", payload, input_address_list, output_address_list, wait=10)  
-                                
+    def query_challenge(self, device_id):
+        queryAddress = _assembleAddress(device_id)
+        LOGGER.info('Query Address %s.',
+                queryAddress)
+        result = self._query_state(queryAddress)
         return result
+    
+    def submit_attestation_response(self, att_response, device_id):
+        storageAddress = _assembleAddress(device_id)
+        LOGGER.info('Storage Address %s.',
+                storageAddress)
+        address_list = [storageAddress] # only need this
+        result = self._wrap_and_send("submit_attestation_response", att_response, address_list, address_list, wait=10)
+        return result
+
+    def submit_verification_request(self, vrfy_request, aidlist, device_id):
+        storageAddress = _assembleAddress(device_id)
+        LOGGER.info('Storage Address %s.',
+                storageAddress)
+        report_address = [_assembleAddress(id) for id in aidlist]
+        input_address_list = ['00b10c00', '00b10c01', storageAddress]
+        input_address_list.extend(report_address)
+        output_address_list = ['00b10c00', '00b10c01', storageAddress]
+        result = self._wrap_and_send("submit_verification_request", vrfy_request, input_address_list, output_address_list, wait=10)
+        return result
+    
 
     def submitCheckRequest(self, payload):
         '''Submit a Trust Query to validator.'''
@@ -153,7 +165,20 @@ class AttestationClient(object):
 
     def generate_nonce(self):
         return os.urandom(JANUS_NONCE_LEN).hex()
-           
+    
+
+    def _query_state(self, query_address):
+        url = "{}/state/{}".format(self._base_url, query_address)
+        try:
+            result = requests.get(url)
+            if not result.ok:
+                raise Exception("Error {}: {}".format(result.status_code, result.reason))
+        except requests.ConnectionError as err:
+            raise Exception(
+            'Failed to connect to {}: {}'.format(url, str(err)))
+        except BaseException as err:
+            raise Exception(err)
+        return result.text
            
     def _send_to_rest_api(self, suffix, data=None, content_type=None):
         '''Send a REST command to the Validator via the REST API.

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x17janus_attestation.proto\"4\n\tChallenge\x12\r\n\x05nonce\x18\x01 \x01(\t\x12\x0b\n\x03\x61id\x18\x02 \x01(\t\x12\x0b\n\x03vid\x18\x03 \x01(\t\"&\n\x06Report\x12\x0f\n\x07payload\x18\x01 \x01(\t\x12\x0b\n\x03\x61id\x18\x02 \x01(\t\"(\n\tAttResult\x12\x0e\n\x06result\x18\x01 \x01(\r\x12\x0b\n\x03vid\x18\x02 \x01(\tb\x06proto3')
+  serialized_pb=_b('\n\x17janus_attestation.proto\"4\n\tChallenge\x12\r\n\x05nonce\x18\x01 \x01(\t\x12\x0b\n\x03\x61id\x18\x02 \x01(\t\x12\x0b\n\x03vid\x18\x03 \x01(\t\"&\n\x06Report\x12\x0f\n\x07payload\x18\x01 \x01(\t\x12\x0b\n\x03\x61id\x18\x02 \x01(\t\"\"\n\x06Verify\x12\x0b\n\x03vid\x18\x01 \x01(\t\x12\x0b\n\x03\x61id\x18\x02 \x03(\t\"(\n\tAttResult\x12\x0e\n\x06result\x18\x01 \x01(\r\x12\x0b\n\x03vid\x18\x02 \x01(\tb\x06proto3')
 )
 
 
@@ -108,6 +108,44 @@ _REPORT = _descriptor.Descriptor(
 )
 
 
+_VERIFY = _descriptor.Descriptor(
+  name='Verify',
+  full_name='Verify',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='vid', full_name='Verify.vid', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='aid', full_name='Verify.aid', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=121,
+  serialized_end=155,
+)
+
+
 _ATTRESULT = _descriptor.Descriptor(
   name='AttResult',
   full_name='AttResult',
@@ -141,12 +179,13 @@ _ATTRESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=121,
-  serialized_end=161,
+  serialized_start=157,
+  serialized_end=197,
 )
 
 DESCRIPTOR.message_types_by_name['Challenge'] = _CHALLENGE
 DESCRIPTOR.message_types_by_name['Report'] = _REPORT
+DESCRIPTOR.message_types_by_name['Verify'] = _VERIFY
 DESCRIPTOR.message_types_by_name['AttResult'] = _ATTRESULT
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -163,6 +202,13 @@ Report = _reflection.GeneratedProtocolMessageType('Report', (_message.Message,),
   # @@protoc_insertion_point(class_scope:Report)
   ))
 _sym_db.RegisterMessage(Report)
+
+Verify = _reflection.GeneratedProtocolMessageType('Verify', (_message.Message,), dict(
+  DESCRIPTOR = _VERIFY,
+  __module__ = 'janus_attestation_pb2'
+  # @@protoc_insertion_point(class_scope:Verify)
+  ))
+_sym_db.RegisterMessage(Verify)
 
 AttResult = _reflection.GeneratedProtocolMessageType('AttResult', (_message.Message,), dict(
   DESCRIPTOR = _ATTRESULT,

@@ -32,6 +32,7 @@ import logging
 import os
 import sys
 import traceback
+import json
 import janus_attestation_pb2
 
 
@@ -78,6 +79,19 @@ def setup_loggers(verbose_level):
     logger.setLevel(logging.DEBUG)
     logger.addHandler(create_console_handler(verbose_level))
 
+def is_json(myjson):
+    try:
+        json.loads(myjson)
+    except ValueError as e:
+        return False
+    return True
+
+def extract_nonce(ss):
+    data = json.loads(ss)
+    print(data["data"])
+    return data["data"]
+
+
 # Assembly of parsers for the transaction commands
 def create_parser(prog_name):
     '''Create the command line argument parser for the attestation CLI.'''
@@ -100,24 +114,26 @@ def create_parser(prog_name):
     submit_challenge_subparser.add_argument('vid',
                                 #type=string,
                                 help='verifier id')
-
-                                
-    trustQuery_subparser = subparsers.add_parser('trustQuery',
-                                           help='Query a trust link',
+    
+    submit_response_subparser = subparsers.add_parser('response',
+                                           help='submit an attestation response report',
                                            parents=[parent_parser])
-    trustQuery_subparser.add_argument('trustor',
+    
+    submit_response_subparser.add_argument('aid',
                                 #type=string,
-                                help='The device to establish trust')	
-    trustQuery_subparser.add_argument('trustee',
+                                help='attester id')
+    
+    request_verify_subparser = subparsers.add_parser('verify',
+                                           help='verify specified attestation responses',
+                                           parents=[parent_parser])
+    
+    request_verify_subparser.add_argument('vid',
                                 #type=string,
-                                help='The device to be attested')
-
-    trustQuery_subparser = subparsers.add_parser('checkRequest',
-                                                 help='Check if there is a pending request',
-                                                 parents=[parent_parser])
-    trustQuery_subparser.add_argument('proverID',
-                                      # type=string,
-                                      help='The device to establish trust')
+                                help='attester id')
+    
+    request_verify_subparser.add_argument('--aidlist',
+                                nargs="+",
+                                help='list of aid')
 
     return parser
 
@@ -140,9 +156,51 @@ def construct_attestation_challenge(nonce, aid, vid):
     ).SerializeToString()
     return encoded_challenge
 
-def generate_attestation_response(args):
+def set_attestation_response(args):
+    privkeyfile = _get_private_keyfile(KEY_NAME)
+    client = AttestationClient(_base_url=DEFAULT_URL, device_id=args.aid, key_file=privkeyfile)
+    check_result = client.query_challenge(args.aid)
+    if is_json(check_result):
+        LOGGER.info("Valid Results")
+        challenge_nonce = extract_nonce(check_result)
+        print(challenge_nonce)
+        att_response = construct_attestation_response(challenge_nonce, args.aid)
+        response = client.submit_attestation_response(att_response, args.aid)
+        print("Set Attestation Response: {}".format(response))
+    else:
+        LOGGER.info("no challenge yet")
+    # then submit challenge
     return 1
 
+def construct_attestation_response(nonce, device_id):
+    payload = construct_attestation_payload(nonce, device_id)
+    response = janus_attestation_pb2.Report (
+        payload = payload,
+        aid = device_id
+    ).SerializeToString()
+    return response
+
+def construct_attestation_payload(nonce, device_id):
+    measurement = ""
+    test_aes_key = ""
+    ciphertext = ""
+    return "f0e4c2f76c58916ec258f246851bea091d14d4247a2fc3e18694461b1816e13b"
+
+def set_verification_request(args):
+    privkeyfile = _get_private_keyfile(KEY_NAME)
+    client = AttestationClient(_base_url=DEFAULT_URL, device_id=args.vid, key_file=privkeyfile)
+    #print(type(args.aidlist), type(args.aidlist[0])==type(args.vid))
+    request = construct_verification_request(args.aidlist, args.vid)
+    response = client.submit_verification_request(request, args.aidlist, args.vid)
+    print("Verification status: {}".format(response))
+    return 1
+
+def construct_verification_request(aidlist, vid):
+    vrfy_request = janus_attestation_pb2.Verify (
+        vid = vid,
+        aid = aidlist
+    ).SerializeToString()
+    return vrfy_request
 
 # def CheckRequest(args):
 #     privkeyfile = _get_private_keyfile(KEY_NAME)
@@ -195,7 +253,9 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None):
         if args.command == 'challenge':
             set_attestation_challenge(args)
         elif args.command == 'response':
-            generate_attestation_response(args)
+            set_attestation_response(args)
+        elif args.command == 'verify':
+            set_verification_request(args)
         else:
             raise Exception("Invalid command: {}".format(args.command))
 

@@ -11,6 +11,11 @@ message Report {
     string aid = 2;
 }
 
+message Verify {
+	string vid = 1;
+	repeated string aid = 2;
+}
+
 message AttResult {
 	uint32 result = 1;
     string vid = 2;
