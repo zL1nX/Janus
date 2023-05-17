@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+
+message DeviceCondition {
+    uint32 device_condition = 1;
+    string aid = 2;
+}
+
+message AttestationState {
+    uint32 attestation_state = 1;
+    string aid = 2;
+    string vid = 3;
+}

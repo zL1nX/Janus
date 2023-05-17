@@ -91,6 +91,40 @@ services:
     volumes:
       - ".:/project/attestation_management/"
 
+  turnout-client:
+    container_name: turnout-client
+    build:
+      context: .
+      dockerfile: ./janus_turnout_transaction_family/client/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    environment:
+      - 'http_proxy=${http_proxy}'
+      - 'https_proxy=${https_proxy}'
+      - 'no_proxy=rest-api,validator,${no_proxy}'
+    volumes:
+      - ".:/project/attestation_management/"
+    depends_on:
+      - rest-api
+    entrypoint: "bash -c \"sawtooth keygen --force turnout && tail -f /dev/null\""
+    stop_signal: SIGKILL
+
+
+  turnout-processor:
+    container_name: turnout-processor
+    build:
+      context: .
+      dockerfile: ./janus_turnout_transaction_family/contract/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    depends_on:
+      - validator
+    volumes:
+      - ".:/project/attestation_management/"
 
   settings-tp:
     image: hyperledger/sawtooth-settings-tp:1.0
