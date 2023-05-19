@@ -11,18 +11,14 @@
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "fsl_power.h"
+#include "network_communication.h"
+#include "janus_communication_ns.h"
 
-
-#include "qcom_api.h"
-
-#include "iot_wifi.h"
-#include "aws_clientcredential.h"
 
 
 #include "clock_config.h"
 
-#include "iot_mqtt_agent.h"
-#include "iot_mqtt.h"
+
 #include "platform/iot_network_freertos.h"
 
 
@@ -62,55 +58,26 @@ void print_string(const char *string)
     PRINTF(string);
 }
 
-const WIFINetworkParams_t pxNetworkParams = {
-    .pcSSID           = clientcredentialWIFI_SSID,
-    .ucSSIDLength     = sizeof(clientcredentialWIFI_SSID) - 1,
-    .pcPassword       = clientcredentialWIFI_PASSWORD,
-    .ucPasswordLength = sizeof(clientcredentialWIFI_PASSWORD) - 1,
-    .xSecurity        = clientcredentialWIFI_SECURITY,
-};
 
-
-
-int initNetwork(void)
+void janus_communication()
 {
-    WIFIReturnCode_t result;
+    int sock = socket_init();
 
-    PRINTF_NSE(("Starting WiFi...\r\n"));
+    uint8_t materials_onchain[100]; // for now
 
-    result = WIFI_On();
-    if (result != eWiFiSuccess)
-    {
-    	configPRINTF(("Could not enable WiFi, reason %d.\r\n", result));
-        return 1;
-    }
+    // retrieve data from chain(): httpget and cjson deconstruct
 
-    PRINTF_NSE(("WiFi module initialized.\r\n"));
+    set_materials_onchain_e(materials_onchain);
 
-    result = WIFI_ConnectAP(&pxNetworkParams);
-    if (result != eWiFiSuccess)
-    {
-    	configPRINTF(("Could not connect to WiFi, reason %d.\r\n", result));
-        return 1;
-    }
+    // SGX那端对应着round_one_recv
+    janus_round_one_send(sock);
 
-    configPRINTF(("WiFi connected to AP %s.\r\n", pxNetworkParams.pcSSID));
+    janus_round_two_recv(sock);
 
-    uint8_t tmp_ip[4] = {0};
-    result            = WIFI_GetIP(tmp_ip);
+    janus_round_three_send(sock);
 
-    if (result != eWiFiSuccess)
-    {
-        configPRINTF(("Could not get IP address, reason %d.\r\n", result));
-        return 1;
-    }
-
-    configPRINTF(("IP Address acquired %d.%d.%d.%d\r\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]));
-
-    return 0;
+    qcom_socket_close(sock);
 }
-
-
 
 void main_task(void *pvParameters)
 {
@@ -124,14 +91,8 @@ void main_task(void *pvParameters)
         }
         else
         {
-
-        	if (IotSdk_Init() != true)
-        	    {
-        	        configPRINTF(("Failed to initialize the common library."));
-        	        vTaskDelete(NULL);
-        	    }
-        	    startMQTT();
-
+        	socket_test();
+            janus_communication();
         }
     }
 

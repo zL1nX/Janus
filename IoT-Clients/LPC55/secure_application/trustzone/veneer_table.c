@@ -15,6 +15,7 @@
 #include "veneer_table.h"
 #include "fsl_debug_console.h"
 #include "attrmgr.h"
+#include "janus_ns_api.h"
 
 /*******************************************************************************
  * Definitions
@@ -134,3 +135,23 @@ __attribute__((cmse_nonsecure_entry)) void checkRequest(char *s, int len) {
 }
 }
 
+__attribute__((cmse_nonsecure_entry)) void init_session_ns() {
+
+	init_janus_session();
+}
+
+__attribute__((cmse_nonsecure_entry)) void construct_janus_message(uint8_t *output,  int round) {
+
+	construct_janus_message_e(output, round);
+}
+
+
+__attribute__((cmse_nonsecure_entry)) int verify_janus_message(uint8_t *input, int inlen, int round) {
+
+	return verify_janus_message_e(uint8_t *input, inlen, round);
+}
+
+__attribute__((cmse_nonsecure_entry)) void obtain_materials_onchain(uint8_t *input_fromchain) {
+
+	obtain_materials_onchain_e(input_fromchain);
+}

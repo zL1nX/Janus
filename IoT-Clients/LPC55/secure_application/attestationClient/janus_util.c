@@ -231,3 +231,12 @@ int A_message_buffering(uint8_t* buffer, const struct janus_msg_A* A, bool with_
     }
     return SUCCESS;
 }
+
+void set_onchain_material(uint8_t *data_fromchain)
+{
+    // deconstruct and get measurement, key, cert
+
+    // then set different global variables
+
+    // this function should be called before the message verification
+}

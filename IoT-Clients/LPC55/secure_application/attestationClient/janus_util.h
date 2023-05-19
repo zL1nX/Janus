@@ -13,3 +13,4 @@ int A_message_buffering(uint8_t* buffer, const struct janus_msg_A* A, bool with_
 bool verify_signature(struct RemoteAttestationClient* client, uint8_t* payload, size_t payloadlen);
 bool verify_measurement(struct RemoteAttestationClient* client, const uint8_t* payload, size_t payloadlen, const uint8_t* A, const uint8_t* g_measurement);
 int construct_measurement(uint8_t* out_measurement, uint8_t* in_measurement, serial_t* sr);
+void set_onchain_material(uint8_t *data_fromchain);

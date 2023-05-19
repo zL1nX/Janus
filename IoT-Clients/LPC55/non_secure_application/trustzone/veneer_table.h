@@ -6,6 +6,7 @@
 #ifndef _VENEER_TABLE_
 #define _VENEER_TABLE_
 
+#include <stdint.h>
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -54,5 +55,8 @@ uint32_t StringCompare_NSE(volatile callbackptr callback, char const *s1, char c
 void trustQuerry(char *trustor, char *trustee, uint8_t *output, int len);
 void submitEvidenceVeneer(char *blockID, uint8_t *output, int len);
 void checkRequest(char *output, int len);
+void construct_janus_message(uint8_t *output, int round);
+int verify_janus_message(uint8_t *input, int inlen, int round);
+void set_materials_onchain(uint8_t *data_fromchain);
 //void trustQuerry2(char *output, int len);
 #endif /* _VENEER_TABLE_ */

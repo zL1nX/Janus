@@ -7,6 +7,8 @@ const uint8_t g_hash_puf_measurement[MEASUREMENT_LEN] = {0xf0, 0x5b, 0x5b, 0xd6,
 uint8_t g_nonce[JANUS_NONCE_LEN]; // global nonce
 uint8_t g_payloadlen[4] = {0, 2 * JANUS_COMM_KEY_LEN, 2 * JANUS_COMM_KEY_LEN + SIGNATURE_SIZE, JANUS_COMM_KEY_LEN + SIGNATURE_SIZE}; 
 
+extern struct RemoteAttestationClient g_client;
+
 int construct_A_message(uint8_t* A, const uint8_t* id, const uint8_t pid, bool with_nonce) {
     size_t cur = 0;
     uint16_t ts = generate_timestamp();
@@ -84,13 +86,13 @@ int deconstruct_encrypted_payload(uint8_t* payload, const uint8_t* communication
     return SUCCESS;
 }
 
-int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_t* janus_msg, int round)
+int construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
 {
     //janus_msg = (janus_ra_msg_t*)malloc(sizeof(janus_ra_msg_t));
     
     size_t payloadlen = g_payloadlen[round];
     size_t alen = JANUS_ID_LEN + 2 + 1;
-    if(round == 2)
+    if(round == 1 || round == 2)
     {
         alen += JANUS_NONCE_LEN;
     }
@@ -100,7 +102,7 @@ int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_
     bool with_random = round == 3 ? false : true;
 
     uint8_t real_puf_measurement[PUF_MEASUREMENT_LEN];
-    if(janus_puf_evaluate(client->sr, real_puf_measurement, g_measurement) != SUCCESS)
+    if(janus_puf_evaluate(g_client.sr, real_puf_measurement, g_measurement) != SUCCESS)
     {
         return ERROR_UNEXPECTED;
     }
@@ -112,7 +114,7 @@ int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_
     // }
     // printf("\n");
     
-    if(construct_A_message(A, client->id, pid, with_random) < 0)
+    if(construct_A_message(A, g_client.id, pid, with_random) < 0)
     {
         return ERROR_UNEXPECTED;
     }
@@ -122,13 +124,13 @@ int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_
     }
     if(round == 2 || round == 3)
     {
-        if(generate_serialized_signature(payload, payloadlen - SIGNATURE_SIZE, client) < 0)
+        if(generate_serialized_signature(payload, payloadlen - SIGNATURE_SIZE, &g_client) < 0)
         {
             return ERROR_UNEXPECTED;
         }
     }
 
-    if(construct_CT_message(C, T, AN, payload, payloadlen, A, alen, client->personal_key, true) < 0)
+    if(construct_CT_message(C, T, AN, payload, payloadlen, A, alen, g_client.personal_key, true) < 0)
     {
         return ERROR_UNEXPECTED;
     }
@@ -146,7 +148,7 @@ int construct_ra_challenge(struct RemoteAttestationClient* client, janus_ra_msg_
     return SUCCESS;
 }
 
-int check_received_message(struct RemoteAttestationClient* client, janus_ra_msg_t* received_msg, int round)
+int check_received_message(janus_ra_msg_t* received_msg, int round)
 {
     size_t payloadlen = g_payloadlen[round];
     uint8_t communication_key[JANUS_COMM_KEY_LEN], group_key[JANUS_COMM_KEY_LEN];
@@ -165,11 +167,11 @@ int check_received_message(struct RemoteAttestationClient* client, janus_ra_msg_
     if(round == 2 || round == 3)
     {
         // first get pubkey from somewhere, here its the client itself
-        if(verify_signature(client, payload, payloadlen) == false)
+        if(verify_signature(&g_client, payload, payloadlen) == false)
         {   
             return INVALID_MESSAGE;
         }
-        if(verify_measurement(client, payload, payloadlen, received_msg->A, g_hash_puf_measurement) == false)
+        if(verify_measurement(&g_client, payload, payloadlen, received_msg->A, g_hash_puf_measurement) == false)
         {
             return INVALID_MESSAGE;
         }
@@ -183,7 +185,7 @@ int check_received_message(struct RemoteAttestationClient* client, janus_ra_msg_
 }
 
 
-ATTESTATION_STATUS construct_ra_message(struct RemoteAttestationClient* client, const size_t round, janus_ra_msg_t* in_out_janus_msg)
+ATTESTATION_STATUS construct_ra_message(const size_t round, janus_ra_msg_t* in_out_janus_msg)
 {
     //uint8_t id[40] = {0};
     janus_ra_msg_t janus_msg;
@@ -191,29 +193,29 @@ ATTESTATION_STATUS construct_ra_message(struct RemoteAttestationClient* client, 
     switch(round)
     {
         case JANUS_RA_R1: {
-            if(construct_ra_challenge(client, &janus_msg, 1) < 0)
+            if(construct_ra_challenge(&janus_msg, 1) < 0)
             {
                 return ERROR_UNEXPECTED;
             }
             break;
         }
         case JANUS_RA_R2: {
-            if(check_received_message(client, in_out_janus_msg, 1) != SUCCESS)
+            if(check_received_message(in_out_janus_msg, 1) != SUCCESS)
             {
                 return INVALID_MESSAGE;
             }
-            if(construct_ra_challenge(client, &janus_msg, 2)< 0)
+            if(construct_ra_challenge(&janus_msg, 2)< 0)
             {
                 return ERROR_UNEXPECTED;
             }
             break;
         }
         case JANUS_RA_R3: {
-            if(check_received_message(client, in_out_janus_msg, 2) == SUCCESS)
+            if(check_received_message(in_out_janus_msg, 2) == SUCCESS)
             {
                 return INVALID_MESSAGE;
             }
-            if(construct_ra_challenge(client, &janus_msg, 3)< 0)
+            if(construct_ra_challenge(&janus_msg, 3)< 0)
             {
                 return ERROR_UNEXPECTED;
             }
