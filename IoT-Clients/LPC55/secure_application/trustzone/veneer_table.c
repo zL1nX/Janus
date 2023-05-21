@@ -151,7 +151,7 @@ __attribute__((cmse_nonsecure_entry)) int verify_janus_message(uint8_t *input, i
 	return verify_janus_message_e(uint8_t *input, inlen, round);
 }
 
-__attribute__((cmse_nonsecure_entry)) void obtain_materials_onchain(uint8_t *input_fromchain) {
+__attribute__((cmse_nonsecure_entry)) void set_materials_onchain(uint8_t *input_fromchain) {
 
-	obtain_materials_onchain_e(input_fromchain);
+	set_materials_onchain_e(input_fromchain);
 }
