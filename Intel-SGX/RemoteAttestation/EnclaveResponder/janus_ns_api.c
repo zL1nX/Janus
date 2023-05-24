@@ -30,28 +30,13 @@ void construct_janus_message(uint8_t* output, int round) {
 
 }
 
-int verify_janus_message(uint8_t *input, int inlen, int round) {
-    // convert uin8_t input to janus message
-    int alen = input[0], clen = input[1];
-    janus_ra_msg_t in;
-    in.A = (uint8_t*)malloc(alen);
-    in.C = (uint8_t*)malloc(clen);
-
-    int cur = 2;
-    memcpy(in.A, input + cur, alen); cur += alen;
-    memcpy(in.AN, input + cur, ASCON_AEAD_NONCE_LEN); cur += ASCON_AEAD_NONCE_LEN;
-    memcpy(in.C, input + cur, clen); cur += clen;
-    memcpy(in.T, input + cur, ASCON_AEAD_TAG_MIN_SECURE_LEN); cur += ASCON_AEAD_TAG_MIN_SECURE_LEN;
-
+int verify_janus_message(janus_ra_msg_t *input, int inlen, int round) {
     int res = 0;
-    if(check_received_message(&in, round) != SUCCESS)
+    if(check_received_message(input, round) != SUCCESS)
     {
         ocall_print_string("verify message wrong\n");
         res = 1;
     }
-
-    free(in.A);
-    free(in.C);
 
     return res;
 }

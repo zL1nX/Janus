@@ -181,11 +181,24 @@ int main(int argc, char* argv[]) {
     }
     printf("\n");
 
-    ret = verify_janus_message(e2_enclave_id, &ret_status, (uint8_t*)buffer, recvlen, 1);
+    int alen = buffer[0], clen = buffer[1];
+    janus_ra_msg_t in;
+    in.A = (uint8_t*)malloc(alen);
+    in.C = (uint8_t*)malloc(clen);
+
+    int cur = 2;
+    memcpy(in.A, buffer + cur, alen); cur += alen;
+    memcpy(in.AN, buffer + cur, ASCON_AEAD_NONCE_LEN); cur += ASCON_AEAD_NONCE_LEN;
+    memcpy(in.C, buffer + cur, clen); cur += clen;
+    memcpy(in.T, buffer + cur, ASCON_AEAD_TAG_MIN_SECURE_LEN); cur += ASCON_AEAD_TAG_MIN_SECURE_LEN;
+
+    ret = verify_janus_message(e2_enclave_id, &ret_status, &in, recvlen, 1);
     if (ret != SGX_SUCCESS) {
         printf("attester verify_janus_message error.\n");
         return -1;
     }
+
+    printf("attester round 1 verify_janus_message done.\n");
 
     // Send a message to the client
     // if (send(new_socket, hello, strlen(hello), 0) < 0) {

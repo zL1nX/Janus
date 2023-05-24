@@ -12,7 +12,7 @@ int init_session()
 {
     uint8_t* priv = private_key;
     memcpy(g_client.personal_key, personal_key, JANUS_COMM_KEY_LEN);
-    if(initClient(&g_client, IS_ATTESTER, priv) != SUCCESS)
+    if(initClient(&g_client, IS_VERIFIER, priv) != SUCCESS)
     {
         return ERROR_UNEXPECTED;
     }
