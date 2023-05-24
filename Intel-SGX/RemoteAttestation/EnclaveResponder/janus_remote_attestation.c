@@ -86,21 +86,33 @@ int deconstruct_encrypted_payload(uint8_t* payload, const uint8_t* communication
     return SUCCESS;
 }
 
-ATTESTATION_STATUS construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
+int construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
 {
     //janus_msg = (janus_ra_msg_t*)malloc(sizeof(janus_ra_msg_t));
 
     size_t payloadlen = g_payloadlen[round];
     size_t alen = JANUS_ID_LEN + 2 + 1;
-    if(round == 2)
+    if(round == 1 || round == 2)
     {
         alen += JANUS_NONCE_LEN;
     }
-    uint8_t A[alen], payload[payloadlen], C[payloadlen], T[ASCON_AEAD_TAG_MIN_SECURE_LEN], AN[ASCON_AEAD_NONCE_LEN];
 
-    const uint8_t* measurement = round == 1 ? NULL: g_puf_measurement;
+    uint8_t A[alen], payload[payloadlen], C[payloadlen], T[ASCON_AEAD_TAG_MIN_SECURE_LEN], AN[ASCON_AEAD_NONCE_LEN];
     uint8_t pid = round == 1 ? 1 : 255;
     bool with_random = round == 3 ? false : true;
+
+    // uint8_t real_puf_measurement[PUF_MEASUREMENT_LEN];
+    // if(janus_puf_evaluate(g_client.sr, real_puf_measurement, g_measurement) != SUCCESS)
+    // {
+    //     return ERROR_UNEXPECTED;
+    // }
+    const uint8_t* measurement = round == 1 ? NULL: g_puf_measurement;
+
+    // for(int i = 0; i < PUF_MEASUREMENT_LEN; i++)
+    // {
+    //     printf("%x ", real_puf_measurement[i]);
+    // }
+    // printf("\n");
 
     if(construct_A_message(A, g_client.id, pid, with_random) < 0)
     {
@@ -136,7 +148,7 @@ ATTESTATION_STATUS construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
     return SUCCESS;
 }
 
-ATTESTATION_STATUS check_received_message(janus_ra_msg_t* received_msg, int round)
+int check_received_message(janus_ra_msg_t* received_msg, int round)
 {
     size_t payloadlen = g_payloadlen[round];
     uint8_t communication_key[JANUS_COMM_KEY_LEN], group_key[JANUS_COMM_KEY_LEN];
@@ -171,7 +183,6 @@ ATTESTATION_STATUS check_received_message(janus_ra_msg_t* received_msg, int roun
 
     return SUCCESS;
 }
-
 
 // ATTESTATION_STATUS construct_ra_message(struct RemoteAttestationClient* client, const size_t round, janus_ra_msg_t* in_out_janus_msg)
 // {
