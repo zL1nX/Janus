@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "serial.h"
+//#include "serial.h"
 #include "ascon.h"
 #include "hmac_sha256.h"
 #include "aes.h"
@@ -46,6 +46,15 @@
 #define PUBKEY_SERIAL_SIZE 64
 #define SIGNATURE_SIZE 64
 
+#define ONLY_ON_CHAIN 0xA1
+#define ONLY_OFF_CHAIN 0xA2
+#define ON_AND_OFF_CHAIN 0xA0
+
+#define ON_CHAIN_ATTEST 0xA3
+#define OFF_CHAIN_ATTEST 0xA4
+
+
+
 typedef uint32_t ATTESTATION_STATUS;
 
 typedef enum {
@@ -63,7 +72,7 @@ struct RemoteAttestationClient {
     secp256k1_context* ctx;
     const uint8_t *private_key; // sk 这里完了再说
     const uint8_t public_key[SIG_PUBKEY_SIZE]; // pk
-    serial_t* sr;
+    //serial_t* sr;
 };
 
 struct janus_msg_A {

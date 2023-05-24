@@ -5,9 +5,7 @@
  */
 
 #include "fsl_device_registers.h"
-#include "fsl_debug_console.h"
 #include "board.h"
-#include "veneer_table.h"
 #include "pin_mux.h"
 #include "clock_config.h"
 #include "fsl_power.h"
@@ -28,7 +26,6 @@
 #define DEMO_SEC_ADDRESS    0x10000000
 #define DEMO_NONSEC_ADDRESS 0x20130000
 typedef void (*funcptr_t)(char const *s);
-#define PRINTF_NSE DbgConsole_Printf_NSE
 
 #define LOGGING_TASK_PRIORITY   (tskIDLE_PRIORITY + 1)
 #define LOGGING_TASK_STACK_SIZE (200)
@@ -59,29 +56,51 @@ void print_string(const char *string)
 }
 
 
-void janus_communication()
+void janus_offchain_communication()
 {
-    int sock = socket_init();
+    init_session_ns();
 
-    uint8_t materials_onchain[100]; // for now
+    // retrieve data from chain
+
+
+
+	int sock = socket_init("10.168.1.180", 18083);
+    //int sock = 2345;
 
     // retrieve data from chain(): httpget and cjson deconstruct
-
-    set_materials_onchain_e(materials_onchain);
 
     // SGX那端对应着round_one_recv
     janus_round_one_send(sock);
 
     janus_round_two_recv(sock);
 
-    janus_round_three_send(sock);
+    //janus_round_three_send(sock);
 
     qcom_socket_close(sock);
 }
 
+void janus_chain_communication(void)
+{
+	uint8_t* raw_json = NULL;
+	size_t json_len = 0;
+	const char* url_body = "/state/d8237565e86d7a1a709f3e40b4ff9f42e0f35c6b7da6a68ff70b004db1cfd66795d5b2";
+	raw_json = http_get_from_chain(&json_len, "10.168.1.180", url_body, 8008, 5000);
+	configPRINTF(("%d %s\r\n", json_len, raw_json));
+
+	uint8_t data_in_json[128];
+	size_t data_len = 0;
+	parse_json_from_chain(data_in_json, &data_len, raw_json);
+	configPRINTF(("%d %x \r\n", data_len, data_in_json[0]));
+
+	if(raw_json != NULL)
+	{
+		custom_free(raw_json);
+	}
+
+}
+
 void main_task(void *pvParameters)
 {
-
     if (SYSTEM_Init() == pdPASS)
     {
         if (initNetwork() != 0)
@@ -91,8 +110,9 @@ void main_task(void *pvParameters)
         }
         else
         {
-        	socket_test();
-            janus_communication();
+        	janus_chain_communication();
+        	//socket_test("10.168.1.180", 18083);
+            //janus_communication();
         }
     }
 

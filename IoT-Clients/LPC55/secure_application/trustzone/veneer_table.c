@@ -14,8 +14,8 @@
 #include "arm_cmse.h"
 #include "veneer_table.h"
 #include "fsl_debug_console.h"
-#include "attrmgr.h"
 #include "janus_ns_api.h"
+#include "janus_contract_turnout.h"
 
 /*******************************************************************************
  * Definitions
@@ -113,27 +113,29 @@ __attribute__((cmse_nonsecure_entry)) uint32_t StringCompare_NSE(volatile callba
     return result;
 }
 
-__attribute__((cmse_nonsecure_entry)) void trustQuerry(char *trustee,  char *s, int len) {
+// __attribute__((cmse_nonsecure_entry)) void trustQuerry(char *trustee,  char *s, int len) {
 
-		trustQueryDirect(trustee, s, len);
-}
-__attribute__((cmse_nonsecure_entry)) void submitEvidenceVeneer(char *blockID, char  *output, int len) {
+// 		trustQueryDirect(trustee, s, len);
+// }
+// __attribute__((cmse_nonsecure_entry)) void submitEvidenceVeneer(char *blockID, char  *output, int len) {
 
-	submit_evidence(blockID,output,len);
-}
-__attribute__((cmse_nonsecure_entry)) void checkRequest(char *s, int len) {
+// 	submit_evidence(blockID,output,len);
+// }
+// // __attribute__((cmse_nonsecure_entry)) void checkRequest(char *s, int len) {
 
-	if (cmse_check_address_range((void *)s, len, CMSE_NONSECURE | CMSE_MPU_READ) == NULL)
-	    {
-	        PRINTF("Input data error: Output buffer is NOT located in normal world!\r\n");
+// // 	if (cmse_check_address_range((void *)s, len, CMSE_NONSECURE | CMSE_MPU_READ) == NULL)
+// // 	    {
+// // 	        PRINTF("Input data error: Output buffer is NOT located in normal world!\r\n");
 
-	    }
-	else{
+// // 	    }
+// // 	else{
 
-		checkRequests( s, len);
-//	}
-}
-}
+// // 		checkRequests( s, len);
+// // //	}
+// // }
+// // }
+
+
 
 __attribute__((cmse_nonsecure_entry)) void init_session_ns() {
 
@@ -154,4 +156,9 @@ __attribute__((cmse_nonsecure_entry)) int verify_janus_message(uint8_t *input, i
 __attribute__((cmse_nonsecure_entry)) void set_materials_onchain(uint8_t *input_fromchain) {
 
 	set_materials_onchain_e(input_fromchain);
+}
+
+__attribute__((cmse_nonsecure_entry)) int submit_device_condition_ns(uint8_t* out, int cond_int) {
+
+	return submit_device_condition(out, cond_int);
 }

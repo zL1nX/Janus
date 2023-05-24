@@ -20,6 +20,13 @@
 #define JANUS_R2_MSG_LEN 2 + A2_LEN + ASCON_TAG + ASCON_NONCE + JANUS_COMMKEY_LEN + PUF_MEASUREMENT_LEN + SIGNATURE_SIZE
 #define JANUS_R3_MSG_LEN 2 + A3_LEN + ASCON_TAG + ASCON_NONCE + HASH_MEASUREMENT_LEN + SIGNATURE_SIZE  // 这块第三轮的长度在secure里没对应, 完了需要对应一下
 
+#define ONLY_ON_CHAIN 0xA1
+#define ONLY_OFF_CHAIN 0xA2
+#define ON_AND_OFF_CHAIN 0xA0
+
+#define ON_CHAIN_ATTEST 0xA3
+#define OFF_CHAIN_ATTEST 0xA4
+
 
 void janus_round_one_send(int sock);
 void janus_round_two_recv(int sock);
