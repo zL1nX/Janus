@@ -28,8 +28,11 @@
 
 - verifier指定aid进行验证 `python3 ./attestation.py verify 5678 --aidlist 12341 12342 12343`
 
-## audition
+## audit
 
+- attester/verifier(通过aggregator)上传一组credentials `python3 ./audit.py credentials <cr1> <cr2> <aid> <vid>`
+
+- participant指定(aid, vid)进行审查 `python3 ./audit.py audit <audit_id> <aid> <vid>`
 
 ## turnout
 
