@@ -50,27 +50,27 @@
 #include "CPTask.h"
 #include "CPServer.h"
 
-sgx_enclave_id_t e2_enclave_id = 0;
-
-#define ENCLAVE_RESPONDER_NAME "libenclave_responder.signed.so"
+// sgx_enclave_id_t e2_enclave_id = 0;
+//
+// #define ENCLAVE_RESPONDER_NAME "libenclave_responder.signed.so"
 
 /* Function Description: load responder enclave
  * */
-int load_enclaves() {
-    sgx_status_t ret = SGX_SUCCESS;
-    sgx_launch_token_t token = {0};
-    int update = 0;
-
-    ret = sgx_create_enclave(ENCLAVE_RESPONDER_NAME, SGX_DEBUG_FLAG, &token, &update,
-                             &e2_enclave_id, NULL);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_RESPONDER_NAME, ret);
-        return -1;
-    }
-
-    return 0;
-}
+// int load_enclaves() {
+//     sgx_status_t ret = SGX_SUCCESS;
+//     sgx_launch_token_t token = {0};
+//     int update = 0;
+//
+//     ret = sgx_create_enclave(ENCLAVE_RESPONDER_NAME, SGX_DEBUG_FLAG, &token, &update,
+//                              &e2_enclave_id, NULL);
+//     if (ret != SGX_SUCCESS)
+//     {
+//         printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_RESPONDER_NAME, ret);
+//         return -1;
+//     }
+//
+//     return 0;
+// }
 
 int process_round1(int clientfd, FIFO_MSGBODY_REQ *req_msg) {
     uint32_t status = 0;
@@ -85,22 +85,22 @@ int process_round1(int clientfd, FIFO_MSGBODY_REQ *req_msg) {
         return -1;
     }
 
-    ret = check_received_message(e2_enclave_id, &status, (const janus_ra_msg_t*)req_msg->buf,
-                                 JANUS_RA_R1);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("EnclaveResponder check_received_message error.\n");
-        return -1;
-    }
+    // ret = check_received_message(e2_enclave_id, &status, (const janus_ra_msg_t*)req_msg->buf,
+    //                              JANUS_RA_R1);
+    // if (ret != SGX_SUCCESS)
+    // {
+    //     printf("EnclaveResponder check_received_message error.\n");
+    //     return -1;
+    // }
 
-    janus_ra_msg_t janus_msg = {0};
-    ret = construct_ra_challenge(e2_enclave_id, &status, &janus_msg, JANUS_RA_R2);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("EnclaveResponder construct_ra_challenge error.\n");
-        return -1;
-    }
-    memcpy(&session_msgresp.janus_msg, &janus_msg, sizeof(janus_ra_msg_t));
+    // janus_ra_msg_t janus_msg = {0};
+    // ret = construct_ra_challenge(e2_enclave_id, &status, &janus_msg, JANUS_RA_R2);
+    // if (ret != SGX_SUCCESS)
+    // {
+    //     printf("EnclaveResponder construct_ra_challenge error.\n");
+    //     return -1;
+    // }
+    // memcpy(&session_msgresp.janus_msg, &janus_msg, sizeof(janus_ra_msg_t));
 
     msgresp = (FIFO_MSG *)malloc(sizeof(FIFO_MSG) + sizeof(SESSION_MSG));
     if (!msgresp)
@@ -139,13 +139,13 @@ int process_round3(int clientfd, SESSION_MSG* msg) {
         return -1;
     }
 
-    ret = check_received_message(e2_enclave_id, &status, (const janus_ra_msg_t*)&msg->janus_msg,
-                                 JANUS_RA_R3);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("EnclaveResponder check_received_message error.\n");
-        return -1;
-    }
+    // ret = check_received_message(e2_enclave_id, &status, (const janus_ra_msg_t*)&msg->janus_msg,
+    //                              JANUS_RA_R3);
+    // if (ret != SGX_SUCCESS)
+    // {
+    //     printf("EnclaveResponder check_received_message error.\n");
+    //     return -1;
+    // }
 
     return 0;
 }
@@ -189,24 +189,24 @@ void CPTask::run() {
     int test_ret = 0;
 
     // load responder enclave
-    status = sgx_create_enclave(ENCLAVE_RESPONDER_NAME, SGX_DEBUG_FLAG, &token, &update,
-                                &e2_enclave_id, NULL);
-    if (status != SGX_SUCCESS) {
-        printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_RESPONDER_NAME, status);
-        return;
-    }
+    // status = sgx_create_enclave(ENCLAVE_RESPONDER_NAME, SGX_DEBUG_FLAG, &token, &update,
+    //                             &e2_enclave_id, NULL);
+    // if (status != SGX_SUCCESS) {
+    //     printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_RESPONDER_NAME, status);
+    //     return;
+    // }
 
-    status = test_func(e2_enclave_id, &test_ret);
-    if (status != SGX_SUCCESS) {
-        printf("verifier test_func error.\n");
-        return;
-    }
+    // status = test_func(e2_enclave_id, &test_ret);
+    // if (status != SGX_SUCCESS) {
+    //     printf("verifier test_func error.\n");
+    //     return;
+    // }
 
-    status = init_session(e2_enclave_id, &ret_status);
-    if (status != SGX_SUCCESS) {
-        printf("verifier init_session error.\n");
-        return;
-    }
+    // status = init_session(e2_enclave_id, &ret_status);
+    // if (status != SGX_SUCCESS) {
+    //     printf("verifier init_session error.\n");
+    //     return;
+    // }
 
     while (!isStopped()) {
         /* receive task frome queue */
@@ -267,7 +267,7 @@ void CPTask::run() {
         message = NULL;
     }
 
-    sgx_destroy_enclave(e2_enclave_id);
+    // sgx_destroy_enclave(e2_enclave_id);
 }
 
 void CPTask::shutdown() {

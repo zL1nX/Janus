@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+message AuditRequest {
+    repeated string ssid = 1;
+    uint32 flag = 2;
+    string audit_id = 3;
+    string aid = 4;
+    string vid = 5;
+}
+
+message Credentials {
+    string nonce = 1;
+    string credential1 = 2;
+    string credential2 = 3;
+    string aid = 4;
+    string vid = 5;
+    string ssid = 6;
+}
+
+message AuditResult {
+    uint32 result = 1;
+    string ssid = 2;
+}

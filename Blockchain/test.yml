@@ -91,6 +91,41 @@ services:
     volumes:
       - ".:/project/attestation_management/"
 
+  audit-client:
+    container_name: audit-client
+    build:
+      context: .
+      dockerfile: ./janus_audit_transaction_family/client/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    environment:
+      - 'http_proxy=${http_proxy}'
+      - 'https_proxy=${https_proxy}'
+      - 'no_proxy=rest-api,validator,${no_proxy}'
+    volumes:
+      - ".:/project/attestation_management/"
+    depends_on:
+      - rest-api
+    entrypoint: "bash -c \"sawtooth keygen --force audit && tail -f /dev/null\""
+    stop_signal: SIGKILL
+
+
+  audit-processor:
+    container_name: audit-processor
+    build:
+      context: .
+      dockerfile: ./janus_audit_transaction_family/contract/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    depends_on:
+      - validator
+    volumes:
+      - ".:/project/attestation_management/"
+
   turnout-client:
     container_name: turnout-client
     build:
