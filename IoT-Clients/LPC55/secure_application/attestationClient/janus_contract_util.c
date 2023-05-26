@@ -26,6 +26,12 @@ char* calculate_address(uint8_t* content)
 	return address;
 }
 
+char* calculate_address_from_pairs(uint8_t* content1, uint8_t* content2)
+{
+	char* address = (char*)malloc(sizeof(char) * 70);
+	return address;
+}
+
 
 uint8_t * _wrap_and_send(char* name, char *action, int size, uint8_t *data, int n_input, char *input_address_list[], int n_output, char *output_address_list[]) {
 
