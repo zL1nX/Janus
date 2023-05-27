@@ -139,6 +139,8 @@ class TurnoutClient(object):
         try:
             if data is not None:
                 result = requests.post(url, headers=headers, data=data)
+                LOGGER.info("Post sending data")
+                LOGGER.info(data)
             else:
                 result = requests.get(url, headers=headers)
 

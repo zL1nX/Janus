@@ -62,10 +62,8 @@ void janus_offchain_communication()
 
     // retrieve data from chain
 
-
-
-	int sock = socket_init("10.168.1.180", 18083);
-    //int sock = 2345;
+	//int sock = socket_init("10.168.1.180", 18083);
+    int sock = 2345;
 
     // retrieve data from chain(): httpget and cjson deconstruct
 
@@ -81,39 +79,52 @@ void janus_offchain_communication()
 
 void janus_chain_communication(void)
 {
-	uint8_t* raw_json = NULL;
-	size_t json_len = 0;
-	const char* url_body = "/state/d8237565e86d7a1a709f3e40b4ff9f42e0f35c6b7da6a68ff70b004db1cfd66795d5b2";
-	raw_json = http_get_from_chain(&json_len, "10.168.1.180", url_body, 8008, 5000);
-	configPRINTF(("%d %s\r\n", json_len, raw_json));
-
-	uint8_t data_in_json[128];
-	size_t data_len = 0;
-	parse_json_from_chain(data_in_json, &data_len, raw_json);
-	configPRINTF(("%d %x \r\n", data_len, data_in_json[0]));
-
-	if(raw_json != NULL)
-	{
-		custom_free(raw_json);
-	}
+//	uint8_t* raw_json = NULL;
+//	size_t json_len = 0;
+//	const char* url_body = "/state/d8237565e86d7a1a709f3e40b4ff9f42e0f35c6b7da6a68ff70b004db1cfd66795d5b2";
+//	raw_json = http_get_from_chain(&json_len, "10.168.1.180", url_body, 8008, 5000);
+//	configPRINTF(("%d %s\r\n", json_len, raw_json));
+//
+//	uint8_t data_in_json[128];
+//	size_t data_len = 0;
+//	parse_json_from_chain(data_in_json, &data_len, raw_json);
+//	configPRINTF(("%d %x \r\n", data_len, data_in_json[0]));
+//
+//	if(raw_json != NULL)
+//	{
+//		custom_free(raw_json);
+//	}
+	janus_contract_client();
 
 }
 
 void main_task(void *pvParameters)
 {
+    uint8_t dc_out[1000];
     if (SYSTEM_Init() == pdPASS)
     {
-        if (initNetwork() != 0)
+    	init_session_ns();
+        //checkRequest(&cr_out,1000);
+
+        int data_size = submit_device_condition_ns(&dc_out, ONLY_OFF_CHAIN);
+        configPRINTF(("%d\r\n", data_size));
+        for(int i = 0; i < 10; i++)
         {
-            configPRINTF(("Network init failed, stopping task.\r\n"));
-            vTaskDelete(NULL);
+     	   configPRINTF(("%x ", dc_out[i]));
         }
-        else
-        {
-        	janus_chain_communication();
-        	//socket_test("10.168.1.180", 18083);
-            //janus_communication();
-        }
+    	//janus_offchain_communication();
+    	//janus_chain_communication();
+//        if (initNetwork() != 0)
+//        {
+//            configPRINTF(("Network init failed, stopping task.\r\n"));
+//            vTaskDelete(NULL);
+//        }
+//        else
+//        {
+//        	janus_chain_communication();
+//        	//socket_test("10.168.1.180", 18083);
+//            //janus_offchain_communication();
+//        }
     }
 
     vTaskDelete(NULL);
@@ -141,7 +152,6 @@ int main(void)
         BOARD_InitDebugConsole();
         CRYPTO_InitHardware();
        // char output[1000];
-       // char output2[1000];
        // char output3[1000];
 // trustQuerry("test","tets",0.7, &output, 1000);
        // checkRequest(&output2,1000);
@@ -149,7 +159,7 @@ int main(void)
 
         //submitEvidenceVeneer("testID","proverID",&output3,1000);
 
-   //     checkRequest(&output2,1000);
+
 
 /*
         result =

@@ -100,14 +100,22 @@ void submit_data_to_chain(uint8_t* data_tochain, int send_len)
 
 void janus_contract_client()
 {
-    uint8_t* out = NULL;
-    
-    int send_len = submit_device_condition_ns(out, ONLY_OFF_CHAIN);
-    // 类似的换其他client函数
+//    uint8_t* out = NULL;
+//
+//    int send_len = submit_device_condition_ns(ONLY_OFF_CHAIN);
+//    // 类似的换其他client函数
+//
+//    configPRINTF(("%d\r\n", send_len));
+//    for(int i = 0; i < 10; i++)
+//    {
+//    	configPRINTF(("%x ", out[i]));
+//    }
+//    configPRINTF(("\r\n"));
 
-    // http_post
-    if(out != NULL)
-    {
-        submit_data_to_chain(out, send_len);
-    }
+
+//    // http_post
+//    if(out != NULL)
+//    {
+//        submit_data_to_chain(out, send_len);
+//    }
 }

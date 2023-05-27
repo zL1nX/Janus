@@ -18,8 +18,8 @@
 //#include "secp256k1_preallocated.h"
 
 uint8_t * _wrap_and_send(char* name, char *action, int size, uint8_t *data, int n_input, char *input_address_list[], int n_output, char *output_address_list[]);
-char* calculate_address(uint8_t* content);
-
+char* assembleAddress(const char *name, uint8_t* data, size_t size);
+uint8_t * my_wrap_and_send(char* name, char *action, int size, uint8_t *data, int* data_size, int n_input, char *input_address_list[], int n_output, char *output_address_list[]);
 
 
 

@@ -1,3 +1,10 @@
+/*
+ * janus_contract_turnout.h
+ *
+ *  Created on: 2023年5月23日
+ *      Author: LoCCS-GoCE
+ */
+
 #ifndef JANUS_CONTRACT_TURNOUT_H_
 #define JANUS_CONTRACT_TURNOUT_H_
 
@@ -6,7 +13,7 @@
 
 
 int submit_device_condition(uint8_t* out, int cond_int);
-void submit_attestation_state(uint8_t* out, uint8_t* aid);
+//void submit_attestation_state(uint8_t* out, uint8_t* aid);
 
 
 #endif /* JANUS_CONTRACT_TURNOUT_H_ */

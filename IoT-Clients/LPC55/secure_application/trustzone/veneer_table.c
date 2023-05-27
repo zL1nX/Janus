@@ -16,6 +16,7 @@
 #include "fsl_debug_console.h"
 #include "janus_ns_api.h"
 #include "janus_contract_turnout.h"
+//#include "attrmgr.h"
 
 /*******************************************************************************
  * Definitions
@@ -121,19 +122,17 @@ __attribute__((cmse_nonsecure_entry)) uint32_t StringCompare_NSE(volatile callba
 
 // 	submit_evidence(blockID,output,len);
 // }
-// // __attribute__((cmse_nonsecure_entry)) void checkRequest(char *s, int len) {
+__attribute__((cmse_nonsecure_entry)) void checkRequest(char *s, int len) {
 
-// // 	if (cmse_check_address_range((void *)s, len, CMSE_NONSECURE | CMSE_MPU_READ) == NULL)
-// // 	    {
-// // 	        PRINTF("Input data error: Output buffer is NOT located in normal world!\r\n");
+if (cmse_check_address_range((void *)s, len, CMSE_NONSECURE | CMSE_MPU_READ) == NULL)
+	{
+		PRINTF("Input data error: Output buffer is NOT located in normal world!\r\n");
 
-// // 	    }
-// // 	else{
-
-// // 		checkRequests( s, len);
-// // //	}
-// // }
-// // }
+	}
+else{
+		//checkRequests(s, len);
+	}
+}
 
 
 
@@ -147,15 +146,14 @@ __attribute__((cmse_nonsecure_entry)) void construct_janus_message(uint8_t *outp
 	construct_janus_message_e(output, round);
 }
 
-
 __attribute__((cmse_nonsecure_entry)) int verify_janus_message(uint8_t *input, int inlen, int round) {
 
-	return verify_janus_message_e(uint8_t *input, inlen, round);
+	return verify_janus_message_e(input, inlen, round);
 }
 
-__attribute__((cmse_nonsecure_entry)) void set_materials_onchain(uint8_t *input_fromchain) {
+__attribute__((cmse_nonsecure_entry)) void set_materials_onchain(uint8_t *input_fromchain, int payload_len) {
 
-	set_materials_onchain_e(input_fromchain);
+	set_materials_onchain_e(input_fromchain, payload_len);
 }
 
 __attribute__((cmse_nonsecure_entry)) int submit_device_condition_ns(uint8_t* out, int cond_int) {
