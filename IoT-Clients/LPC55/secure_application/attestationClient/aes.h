@@ -19,8 +19,8 @@
   #define ECB 1
 #endif
 
-#ifndef CTR
-  #define CTR 1
+#ifndef CTRA
+  #define CTRA 1
 #endif
 
 
@@ -44,13 +44,13 @@
 struct AES_ctx
 {
   uint8_t RoundKey[AES_keyExpSize];
-#if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
+#if (defined(CBC) && (CBC == 1)) || (defined(CTRA) && (CTRA == 1))
   uint8_t Iv[AES_BLOCKLEN];
 #endif
 };
 
 void AES_init_ctx(struct AES_ctx* ctx, const uint8_t* key);
-#if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
+#if (defined(CBC) && (CBC == 1)) || (defined(CTRA) && (CTRA == 1))
 void AES_init_ctx_iv(struct AES_ctx* ctx, const uint8_t* key, const uint8_t* iv);
 void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv);
 #endif
@@ -76,7 +76,7 @@ void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
 #endif // #if defined(CBC) && (CBC == 1)
 
 
-#if defined(CTR) && (CTR == 1)
+#if defined(CTRA) && (CTRA == 1)
 
 // Same function for encrypting as for decrypting. 
 // IV is incremented for every block, and used after encryption as XOR-compliment for output

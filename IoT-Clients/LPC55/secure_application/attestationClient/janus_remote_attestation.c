@@ -101,12 +101,12 @@ int construct_ra_challenge(janus_ra_msg_t* janus_msg, int round)
     uint8_t pid = round == 1 ? 1 : 255;
     bool with_random = round == 3 ? false : true;
 
-    uint8_t real_puf_measurement[PUF_MEASUREMENT_LEN];
-    if(janus_puf_evaluate(g_client.sr, real_puf_measurement, g_measurement) != SUCCESS)
-    {
-        return ERROR_UNEXPECTED;
-    }
-    const uint8_t* measurement = round == 1 ? NULL: real_puf_measurement;
+//    uint8_t real_puf_measurement[PUF_MEASUREMENT_LEN];
+//    if(janus_puf_evaluate(g_client.sr, real_puf_measurement, g_measurement) != SUCCESS)
+//    {
+//        return ERROR_UNEXPECTED;
+//    }
+    const uint8_t* measurement = round == 1 ? NULL: g_puf_measurement;
     
     // for(int i = 0; i < PUF_MEASUREMENT_LEN; i++)
     // {

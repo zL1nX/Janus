@@ -55,14 +55,14 @@ uint8_t* construct_audit_request(uint8_t* audit_id, uint8_t* aid, uint8_t* vid, 
 
 void submit_audit_request(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t* vid)
 {
-	int size = 0;
-	uint8_t* pb_audit_req = construct_audit_request(cr1, cr2, aid, vid, &size);
-	// submit pb_condition to chain
-	char* input_address[] = {calculate_address_from_pairs(aid, vid)};
-	char* output_address[] = {calculate_address(audit_id)};
-	out = _wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credentials", size, pb_audit_req, 1, input_address, 1, output_address);
-	if(pb_audit_req != NULL)
-	{
-		free(pb_audit_req);
-	}
+//	int size = 0;
+//	uint8_t* pb_audit_req = construct_audit_request(cr1, cr2, aid, vid, &size);
+//	// submit pb_condition to chain
+//	char* input_address[] = {calculate_address_from_pairs(aid, vid)};
+//	char* output_address[] = {calculate_address(audit_id)};
+//	out = _wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credentials", size, pb_audit_req, 1, input_address, 1, output_address);
+//	if(pb_audit_req != NULL)
+//	{
+//		free(pb_audit_req);
+//	}
 }

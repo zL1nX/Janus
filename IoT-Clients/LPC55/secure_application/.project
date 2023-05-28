@@ -3,6 +3,7 @@
 	<name>secure_application</name>
 	<comment></comment>
 	<projects>
+		<project>old_non_secure_application</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -24,11 +25,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>doc/readme.txt</name>
-			<type>1</type>
-			<locationURI>SDK_2_x_LPCXpresso55S69/boards/lpcxpresso55s69/trustzone_examples/secure_faults/cm33_core0/secure_faults_s/readme.txt</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>

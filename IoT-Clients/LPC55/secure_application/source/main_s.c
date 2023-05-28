@@ -25,7 +25,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DEMO_CODE_START_NS 0x00040000
+#define DEMO_CODE_START_NS 0x00050000
 #define AHB_LAYERS_COUNT 12U
 #define NON_SECURE_START DEMO_CODE_START_NS
 

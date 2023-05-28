@@ -3,12 +3,12 @@
     <stringAttribute key=".gdbinit" value=""/>
     <booleanAttribute key="attach" value="false"/>
     <stringAttribute key="bootrom.stall" value="0x50000040"/>
-    <stringAttribute key="com.crt.ctrlcenter.OFSemuDetails" value="LinkServer"/>
+    <stringAttribute key="com.crt.ctrlcenter.OFSemuDetails" value="LinkServerIRASBQER"/>
     <booleanAttribute key="com.crt.ctrlcenter.crtInit" value="true"/>
     <stringAttribute key="com.crt.ctrlcenter.currentWireType" value="SWD"/>
     <booleanAttribute key="com.crt.ctrlcenter.mainBreakIsHardware" value="true"/>
     <booleanAttribute key="com.crt.ctrlcenter.saveState" value="true"/>
-    <stringAttribute key="com.crt.ctrlcenter.serialNumber" value="LinkServerNXP SemiconductorsLPC-LINK2 CMSIS-DAP V5.361JQA1BQHQ"/>
+    <stringAttribute key="com.crt.ctrlcenter.serialNumber" value="LinkServerNXP SemiconductorsLPC-LINK2 CMSIS-DAP V5.224IRASBQER"/>
     <mapAttribute key="com.crt.ctrlcenter.symbolsGroupSettings"/>
     <intAttribute key="com.crt.ctrlcenter.version" value="6"/>
     <stringAttribute key="com.nxp.mcuxpresso.flash.base.address" value="0x40000"/>
@@ -19,7 +19,7 @@
     <stringAttribute key="com.nxp.mcuxpresso.flash.program.action" value="Program"/>
     <booleanAttribute key="com.nxp.mcuxpresso.flash.reset.target" value="true"/>
     <stringAttribute key="com.nxp.mcuxpresso.ide.probe.manufacturer" value="NXP Semiconductors"/>
-    <stringAttribute key="com.nxp.mcuxpresso.ide.probe.name" value="LPC-LINK2 CMSIS-DAP V5.361"/>
+    <stringAttribute key="com.nxp.mcuxpresso.ide.probe.name" value="LPC-LINK2 CMSIS-DAP V5.224"/>
     <stringAttribute key="com.nxp.mcuxpresso.ide.probe.type" value="LinkServer"/>
     <stringAttribute key="debug.level" value="2"/>
     <stringAttribute key="emu.speed" value=""/>

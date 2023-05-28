@@ -272,7 +272,7 @@ static MQTTBool_t prvMQTTCallback( void * pvUserData,
      //expected size 1407
     char testmsg[1407];
     char * buf3 = "e8b77a30c1ad30c560ae5342edf8111ec6449b24758e19e910b488cc4b369970763add25241f5bb4737eff9d03698c70a4a1114ba9233a77ddf7257ba79237c3";
-    submitEvidenceVeneer(&buf3,&testmsg,1407);
+    //submitEvidenceVeneer(&buf3,&testmsg,1407);
     configPRINTF( ( "send evidence...\r\n" ) );
     prvPublish(&testmsg,1407);
     /* Returning eMQTTFalse tells the MQTT agent that the ownership

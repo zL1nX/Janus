@@ -27,7 +27,7 @@
 #define ON_CHAIN_ATTEST 0xA3
 #define OFF_CHAIN_ATTEST 0xA4
 
-
 void janus_round_one_send(int sock);
 void janus_round_two_recv(int sock);
 void janus_round_three_send(int sock);
+void janus_contract_client();

@@ -96,7 +96,7 @@ uint16_t generate_timestamp()
 
 int generate_serialized_signature(uint8_t* msg_sig_buf, size_t message_len, struct RemoteAttestationClient* client)
 {
-    uint8_t signature_buffer[SIGNATURE_SIZE];
+    //uint8_t signature_buffer[SIGNATURE_SIZE];
     uint8_t unsigned_message[SHA256_HASH_SIZE]; // at least 32 bytes
     memset(unsigned_message, 0, SHA256_HASH_SIZE);
     memcpy(unsigned_message, msg_sig_buf, message_len);
@@ -183,9 +183,9 @@ int initClientSign(struct RemoteAttestationClient* client)
     return SUCCESS;
 }
 
-int initClient(struct RemoteAttestationClient* client, int role, const uint8_t* priv_key)
+int initJanusClient(struct RemoteAttestationClient* client, int role, const uint8_t* priv_key)
 {
-    uint8_t cid[JANUS_ID_LEN];
+    //uint8_t cid[JANUS_ID_LEN];
     size_t cur = 0;
 
     client->role = role;
@@ -230,13 +230,4 @@ int A_message_buffering(uint8_t* buffer, const struct janus_msg_A* A, bool with_
         memcpy(buffer + JANUS_ID_LEN + 1 + sizeof(A->timestamp), &(A->nonce), JANUS_NONCE_LEN);
     }
     return SUCCESS;
-}
-
-void set_onchain_material(uint8_t *data_fromchain)
-{
-    // deconstruct and get measurement, key, cert
-
-    // then set different global variables
-
-    // this function should be called before the message verification
 }
