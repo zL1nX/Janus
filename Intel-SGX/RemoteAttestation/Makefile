@@ -51,7 +51,7 @@ else
 endif
 endif
 
-SUB_DIR := AppInitiator AppResponder EnclaveInitiator EnclaveResponder
+SUB_DIR := AppResponder EnclaveResponder
 
 ifneq ($(OUTDIR),)
 $(shell mkdir -p $(OUTDIR))

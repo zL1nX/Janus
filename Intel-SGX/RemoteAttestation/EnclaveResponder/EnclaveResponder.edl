@@ -37,6 +37,7 @@ enclave {
             public void init_janus_session(void);
             public void construct_janus_message([out] uint8_t* output, int round);
             public int verify_janus_message([in] janus_ra_msg_t* input, int inlen, int round);
+            public int submit_device_condition([out, size=30] uint8_t* out, int cond_int);
             public int test_func(void);
     };
 

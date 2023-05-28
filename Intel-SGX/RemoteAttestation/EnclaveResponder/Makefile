@@ -94,8 +94,10 @@ endif
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -nostdinc++
 
 Enclave_C_Files := $(wildcard *.c)
-Enclave_C_Files += $(wildcard ../util/crypto/*.c)
-Enclave_C_Files += $(wildcard ../util/crypto/secp256k1/*.c)
+Enclave_C_Files += $(wildcard attestationClient/*.c)
+Enclave_C_Files += $(wildcard attestationClient/cbor/*.c)
+Enclave_C_Files += $(wildcard attestationClient/cbor/internal/*.c)
+Enclave_C_Files += $(wildcard attestationClient/utility/*.c)
 ENCLAVE_C_OBJECTS := $(Enclave_C_Files:.c=.o)
 
 .PHONY = all clean target
