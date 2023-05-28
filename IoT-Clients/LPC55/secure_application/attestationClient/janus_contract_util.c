@@ -43,6 +43,37 @@ char* assembleAddress(const char* name, uint8_t *data, size_t size) {
 	return assembledAddress;
 }
 
+// Helper method for address assembly with current transaction family name
+char* assembleAddressFromPairs(const char* name, uint8_t *elem1, uint8_t *elem2, size_t size) {
+	char *assembledAddress = malloc(sizeof(char) * 71);
+
+	char hashoffamilyname[SHA512_DIGEST_LENGTH];
+	hash512(name, strlen(name), hashoffamilyname);
+
+	char *string_of_hashoffamilyname[SHA512_DIGEST_LENGTH * 2 + 1];
+	int8_to_char(hashoffamilyname, SHA512_DIGEST_LENGTH, string_of_hashoffamilyname);
+
+	char hashelem1[SHA512_DIGEST_LENGTH];
+	hash512(elem1, size, hashelem1);
+
+	char *string_of_hashelem1[SHA512_DIGEST_LENGTH * 2 + 1];
+	int8_to_char(hashelem1, SHA512_DIGEST_LENGTH, string_of_hashelem1);
+
+	char hashelem2[SHA512_DIGEST_LENGTH];
+	hash512(elem2, size, hashelem2);
+
+	char *string_of_hashelem2[SHA512_DIGEST_LENGTH * 2 + 1];
+	int8_to_char(hashelem2, SHA512_DIGEST_LENGTH, string_of_hashelem2);
+
+	strncpy(assembledAddress, string_of_hashoffamilyname, 6);
+	strncat(assembledAddress, hashelem1, 32);
+	strncat(assembledAddress, hashelem2, 32);
+
+	assembledAddress[70] = '\0';
+
+	return assembledAddress;
+}
+
 uint8_t * my_wrap_and_send(char* name, char *action, int size, uint8_t *data, int* data_size, int n_input, char *input_address_list[], int n_output, char *output_address_list[]) {
 
 	// +++CBOR of payload and actions
