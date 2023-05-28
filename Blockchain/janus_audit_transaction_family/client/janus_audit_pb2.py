@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x11janus_audit.proto\"V\n\x0c\x41uditRequest\x12\x0c\n\x04ssid\x18\x01 \x03(\t\x12\x0c\n\x04\x66lag\x18\x02 \x01(\r\x12\x10\n\x08\x61udit_id\x18\x03 \x01(\t\x12\x0b\n\x03\x61id\x18\x04 \x01(\t\x12\x0b\n\x03vid\x18\x05 \x01(\t\"n\n\x0b\x43redentials\x12\r\n\x05nonce\x18\x01 \x01(\t\x12\x13\n\x0b\x63redential1\x18\x02 \x01(\t\x12\x13\n\x0b\x63redential2\x18\x03 \x01(\t\x12\x0b\n\x03\x61id\x18\x04 \x01(\t\x12\x0b\n\x03vid\x18\x05 \x01(\t\x12\x0c\n\x04ssid\x18\x06 \x01(\t\"+\n\x0b\x41uditResult\x12\x0e\n\x06result\x18\x01 \x01(\r\x12\x0c\n\x04ssid\x18\x02 \x01(\tb\x06proto3')
+  serialized_pb=_b('\n\x11janus_audit.proto\"V\n\x0c\x41uditRequest\x12\x0c\n\x04ssid\x18\x01 \x03(\t\x12\x0c\n\x04\x66lag\x18\x02 \x01(\r\x12\x10\n\x08\x61udit_id\x18\x03 \x01(\t\x12\x0b\n\x03\x61id\x18\x04 \x01(\t\x12\x0b\n\x03vid\x18\x05 \x01(\t\"\\\n\x0f\x41uditCredential\x12\r\n\x05nonce\x18\x01 \x01(\t\x12\x12\n\ncredential\x18\x02 \x01(\t\x12\x0b\n\x03\x61id\x18\x03 \x01(\t\x12\x0b\n\x03vid\x18\x04 \x01(\t\x12\x0c\n\x04ssid\x18\x05 \x01(\t\"+\n\x0b\x41uditResult\x12\x0e\n\x06result\x18\x01 \x01(\r\x12\x0c\n\x04ssid\x18\x02 \x01(\tb\x06proto3')
 )
 
 
@@ -84,51 +84,44 @@ _AUDITREQUEST = _descriptor.Descriptor(
 )
 
 
-_CREDENTIALS = _descriptor.Descriptor(
-  name='Credentials',
-  full_name='Credentials',
+_AUDITCREDENTIAL = _descriptor.Descriptor(
+  name='AuditCredential',
+  full_name='AuditCredential',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='nonce', full_name='Credentials.nonce', index=0,
+      name='nonce', full_name='AuditCredential.nonce', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='credential1', full_name='Credentials.credential1', index=1,
+      name='credential', full_name='AuditCredential.credential', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='credential2', full_name='Credentials.credential2', index=2,
+      name='aid', full_name='AuditCredential.aid', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='aid', full_name='Credentials.aid', index=3,
+      name='vid', full_name='AuditCredential.vid', index=3,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='vid', full_name='Credentials.vid', index=4,
+      name='ssid', full_name='AuditCredential.ssid', index=4,
       number=5, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='ssid', full_name='Credentials.ssid', index=5,
-      number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -146,7 +139,7 @@ _CREDENTIALS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=109,
-  serialized_end=219,
+  serialized_end=201,
 )
 
 
@@ -183,12 +176,12 @@ _AUDITRESULT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=221,
-  serialized_end=264,
+  serialized_start=203,
+  serialized_end=246,
 )
 
 DESCRIPTOR.message_types_by_name['AuditRequest'] = _AUDITREQUEST
-DESCRIPTOR.message_types_by_name['Credentials'] = _CREDENTIALS
+DESCRIPTOR.message_types_by_name['AuditCredential'] = _AUDITCREDENTIAL
 DESCRIPTOR.message_types_by_name['AuditResult'] = _AUDITRESULT
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -199,12 +192,12 @@ AuditRequest = _reflection.GeneratedProtocolMessageType('AuditRequest', (_messag
   ))
 _sym_db.RegisterMessage(AuditRequest)
 
-Credentials = _reflection.GeneratedProtocolMessageType('Credentials', (_message.Message,), dict(
-  DESCRIPTOR = _CREDENTIALS,
+AuditCredential = _reflection.GeneratedProtocolMessageType('AuditCredential', (_message.Message,), dict(
+  DESCRIPTOR = _AUDITCREDENTIAL,
   __module__ = 'janus_audit_pb2'
-  # @@protoc_insertion_point(class_scope:Credentials)
+  # @@protoc_insertion_point(class_scope:AuditCredential)
   ))
-_sym_db.RegisterMessage(Credentials)
+_sym_db.RegisterMessage(AuditCredential)
 
 AuditResult = _reflection.GeneratedProtocolMessageType('AuditResult', (_message.Message,), dict(
   DESCRIPTOR = _AUDITRESULT,

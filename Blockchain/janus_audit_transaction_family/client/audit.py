@@ -42,6 +42,13 @@ from audit_client import AuditClient
 
 KEY_NAME = 'audit'
 
+ATTESTER_MEASUREMENT = "f05b5bd660c52e61969150db79cf5a887dcb187e04c7bbe542f46152bbb48c2e"
+ATTESTER_KS = "75d573976a977ba45df5a17c9d9b0c66"
+ATTESTER_KG = "e35c7160ec6385d16ffb6d12e027678b"
+VERIFIER_MEASUREMENT = "4558715731e23bad3b8a4599493506c21af7c67c248160119269c5b1de4deb26"
+VERIFIER_KS = "b5fbe2160e9a507523818e75351f7076"
+VERIFIER_KG = "2733cc6ef145dd9d4fc70fbb95e4c4e7"
+
 # hard-coded for simplicity (otherwise get the URL from the args in main):
 #DEFAULT_URL = 'http://localhost:8008'
 
@@ -103,25 +110,20 @@ def create_parser(prog_name):
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
     subparsers.required = True
 
-    submit_credentials_subparser = subparsers.add_parser('credentials',
-                                           help='submit audit credential pairs',
+    submit_audit_credential_subparser = subparsers.add_parser('credentials',
+                                           help='submit audit credential',
                                            parents=[parent_parser])
 
-    submit_credentials_subparser.add_argument('cr1',
-                                #type=string,
-                                help='credential 1')
-
-    submit_credentials_subparser.add_argument('cr2',
-                                #type=string,
-                                help='credential 2')
-
-    submit_challenge_subparser.add_argument('aid',
+    submit_audit_credential_subparser.add_argument('aid',
                                 #type=string,
                                 help='attester id')
 
-    submit_challenge_subparser.add_argument('vid',
+    submit_audit_credential_subparser.add_argument('vid',
                                 #type=string,
                                 help='verifier id')
+
+    submit_audit_credential_subparser.add_argument('--attester', dest='attester', action='store_true')
+    submit_audit_credential_subparser.add_argument('--verifier', dest='attester', action='store_false')
 
     credential_audit_subparser = subparsers.add_parser('audit',
                                            help='audit credentials of the specified aid and vid',
@@ -142,24 +144,34 @@ def create_parser(prog_name):
     return parser
 
 
-def set_audit_credentials(args):
-    '''Subcommand to submit a pair of credentials.  Calls client class to do submission.'''
+def set_audit_credential(args):
+    '''Subcommand to submit a credential.  Calls client class to do submission.'''
     privkeyfile = _get_private_keyfile(KEY_NAME)
     client = AuditClient(_base_url=DEFAULT_URL, key_file=privkeyfile)
     nonce = client.generate_nonce()
-    payload = construct_audit_credentials(nonce, args.cr1, args.cr2, args.aid, args.vid)
-    response = client.submit_audit_credentials(payload, args.aid)
-    print("Set Audit Credentials: {}".format(response))
+    payload = construct_audit_credential(nonce, args.aid, args.vid, args.attester)
+    response = client.submit_audit_credential(payload, args.aid, args.vid)
+    print("Set Audit Credential: {}".format(response))
 
-def construct_audit_credentials(nonce, cr1, cr2, aid, vid):
-    encoded_challenge = janus_audit_pb2.Credentials(
+# Hashing helper method
+def _hash(data):
+    return hashlib.sha512(data).hexdigest()
+
+def _calculateCredential(aid, vid, is_attester):
+    if is_attester:
+        return _hash(_hash(ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid + VERIFIER_KS) + ATTESTER_KG)
+    else:
+        return _hash(_hash(ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid + ATTESTER_KS) + VERIFIER_KG)
+
+def construct_audit_credential(nonce, aid, vid, is_attester):
+    cred = _calculateCredential(aid, vid, is_attester)
+    encoded_credential = janus_audit_pb2.AuditCredential(
         nonce = nonce,
-        credential1 = cr1,
-        credential2 = cr2,
+        credential = cred,
         aid = aid,
         vid = vid
     ).SerializeToString()
-    return encoded_challenge
+    return encoded_credential
 
 def set_audit_request(args):
     privkeyfile = _get_private_keyfile(KEY_NAME)
@@ -167,7 +179,6 @@ def set_audit_request(args):
     request = construct_audit_request(args.audit_id, args.aid, args.vid)
     response = client.submit_audit_request(request, args.audit_id, args.aid, args.vid)
     print("Audit status: {}".format(response))
-    return 1
 
 def construct_audit_request(audit_id, aid, vid):
     audit_request = janus_audit_pb2.AuditRequest (
@@ -192,8 +203,8 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None):
         verbose_level = 0
         setup_loggers(verbose_level=verbose_level)
 
-        if args.command == 'credentials':
-            set_audit_credentials(args)
+        if args.command == 'credential':
+            set_audit_credential(args)
         elif args.command == 'audit':
             set_audit_request(args)
         else:
