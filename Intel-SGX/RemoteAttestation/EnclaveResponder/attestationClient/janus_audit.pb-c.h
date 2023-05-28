@@ -16,7 +16,7 @@ PROTOBUF_C__BEGIN_DECLS
 
 
 typedef struct _AuditRequest AuditRequest;
-typedef struct _Credentials Credentials;
+typedef struct _AuditCredential AuditCredential;
 typedef struct _AuditResult AuditResult;
 
 
@@ -40,19 +40,18 @@ struct  _AuditRequest
     , 0,NULL, 0, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string }
 
 
-struct  _Credentials
+struct  _AuditCredential
 {
   ProtobufCMessage base;
   char *nonce;
-  char *credential1;
-  char *credential2;
+  char *credential;
   char *aid;
   char *vid;
   char *ssid;
 };
-#define CREDENTIALS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&credentials__descriptor) \
-    , (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string }
+#define AUDIT_CREDENTIAL__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&audit_credential__descriptor) \
+    , (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string }
 
 
 struct  _AuditResult
@@ -85,24 +84,24 @@ AuditRequest *
 void   audit_request__free_unpacked
                      (AuditRequest *message,
                       ProtobufCAllocator *allocator);
-/* Credentials methods */
-void   credentials__init
-                     (Credentials         *message);
-size_t credentials__get_packed_size
-                     (const Credentials   *message);
-size_t credentials__pack
-                     (const Credentials   *message,
+/* AuditCredential methods */
+void   audit_credential__init
+                     (AuditCredential         *message);
+size_t audit_credential__get_packed_size
+                     (const AuditCredential   *message);
+size_t audit_credential__pack
+                     (const AuditCredential   *message,
                       uint8_t             *out);
-size_t credentials__pack_to_buffer
-                     (const Credentials   *message,
+size_t audit_credential__pack_to_buffer
+                     (const AuditCredential   *message,
                       ProtobufCBuffer     *buffer);
-Credentials *
-       credentials__unpack
+AuditCredential *
+       audit_credential__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   credentials__free_unpacked
-                     (Credentials *message,
+void   audit_credential__free_unpacked
+                     (AuditCredential *message,
                       ProtobufCAllocator *allocator);
 /* AuditResult methods */
 void   audit_result__init
@@ -128,8 +127,8 @@ void   audit_result__free_unpacked
 typedef void (*AuditRequest_Closure)
                  (const AuditRequest *message,
                   void *closure_data);
-typedef void (*Credentials_Closure)
-                 (const Credentials *message,
+typedef void (*AuditCredential_Closure)
+                 (const AuditCredential *message,
                   void *closure_data);
 typedef void (*AuditResult_Closure)
                  (const AuditResult *message,
@@ -141,7 +140,7 @@ typedef void (*AuditResult_Closure)
 /* --- descriptors --- */
 
 extern const ProtobufCMessageDescriptor audit_request__descriptor;
-extern const ProtobufCMessageDescriptor credentials__descriptor;
+extern const ProtobufCMessageDescriptor audit_credential__descriptor;
 extern const ProtobufCMessageDescriptor audit_result__descriptor;
 
 PROTOBUF_C__END_DECLS

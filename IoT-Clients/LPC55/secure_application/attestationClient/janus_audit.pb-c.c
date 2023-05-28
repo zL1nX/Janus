@@ -52,49 +52,49 @@ void   audit_request__free_unpacked
   assert(message->base.descriptor == &audit_request__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   credentials__init
-                     (Credentials         *message)
+void   audit_credential__init
+                     (AuditCredential         *message)
 {
-  static const Credentials init_value = CREDENTIALS__INIT;
+  static const AuditCredential init_value = AUDIT_CREDENTIAL__INIT;
   *message = init_value;
 }
-size_t credentials__get_packed_size
-                     (const Credentials *message)
+size_t audit_credential__get_packed_size
+                     (const AuditCredential *message)
 {
-  assert(message->base.descriptor == &credentials__descriptor);
+  assert(message->base.descriptor == &audit_credential__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t credentials__pack
-                     (const Credentials *message,
+size_t audit_credential__pack
+                     (const AuditCredential *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &credentials__descriptor);
+  assert(message->base.descriptor == &audit_credential__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t credentials__pack_to_buffer
-                     (const Credentials *message,
+size_t audit_credential__pack_to_buffer
+                     (const AuditCredential *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &credentials__descriptor);
+  assert(message->base.descriptor == &audit_credential__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Credentials *
-       credentials__unpack
+AuditCredential *
+       audit_credential__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Credentials *)
-     protobuf_c_message_unpack (&credentials__descriptor,
+  return (AuditCredential *)
+     protobuf_c_message_unpack (&audit_credential__descriptor,
                                 allocator, len, data);
 }
-void   credentials__free_unpacked
-                     (Credentials *message,
+void   audit_credential__free_unpacked
+                     (AuditCredential *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &credentials__descriptor);
+  assert(message->base.descriptor == &audit_credential__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   audit_result__init
@@ -232,7 +232,7 @@ const ProtobufCMessageDescriptor audit_request__descriptor =
   (ProtobufCMessageInit) audit_request__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor credentials__field_descriptors[6] =
+static const ProtobufCFieldDescriptor audit_credential__field_descriptors[5] =
 {
   {
     "nonce",
@@ -240,31 +240,19 @@ static const ProtobufCFieldDescriptor credentials__field_descriptors[6] =
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Credentials, nonce),
+    offsetof(AuditCredential, nonce),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "credential1",
+    "credential",
     2,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Credentials, credential1),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "credential2",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Credentials, credential2),
+    offsetof(AuditCredential, credential),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
@@ -272,11 +260,11 @@ static const ProtobufCFieldDescriptor credentials__field_descriptors[6] =
   },
   {
     "aid",
-    4,
+    3,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Credentials, aid),
+    offsetof(AuditCredential, aid),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
@@ -284,11 +272,11 @@ static const ProtobufCFieldDescriptor credentials__field_descriptors[6] =
   },
   {
     "vid",
-    5,
+    4,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Credentials, vid),
+    offsetof(AuditCredential, vid),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
@@ -296,43 +284,42 @@ static const ProtobufCFieldDescriptor credentials__field_descriptors[6] =
   },
   {
     "ssid",
-    6,
+    5,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Credentials, ssid),
+    offsetof(AuditCredential, ssid),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned credentials__field_indices_by_name[] = {
-  3,   /* field[3] = aid */
-  1,   /* field[1] = credential1 */
-  2,   /* field[2] = credential2 */
+static const unsigned audit_credential__field_indices_by_name[] = {
+  2,   /* field[2] = aid */
+  1,   /* field[1] = credential */
   0,   /* field[0] = nonce */
-  5,   /* field[5] = ssid */
-  4,   /* field[4] = vid */
+  4,   /* field[4] = ssid */
+  3,   /* field[3] = vid */
 };
-static const ProtobufCIntRange credentials__number_ranges[1 + 1] =
+static const ProtobufCIntRange audit_credential__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 6 }
+  { 0, 5 }
 };
-const ProtobufCMessageDescriptor credentials__descriptor =
+const ProtobufCMessageDescriptor audit_credential__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "Credentials",
-  "Credentials",
-  "Credentials",
+  "AuditCredential",
+  "AuditCredential",
+  "AuditCredential",
   "",
-  sizeof(Credentials),
-  6,
-  credentials__field_descriptors,
-  credentials__field_indices_by_name,
-  1,  credentials__number_ranges,
-  (ProtobufCMessageInit) credentials__init,
+  sizeof(AuditCredential),
+  5,
+  audit_credential__field_descriptors,
+  audit_credential__field_indices_by_name,
+  1,  audit_credential__number_ranges,
+  (ProtobufCMessageInit) audit_credential__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor audit_result__field_descriptors[2] =
