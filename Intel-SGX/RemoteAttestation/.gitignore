@@ -11,6 +11,10 @@ EnclaveResponder/*.o
 EnclaveResponder/*.pem
 EnclaveResponder/*.so
 EnclaveResponder/*_t*
+EnclaveResponder/attestationClient/*.o
+EnclaveResponder/attestationClient/cbor/*.o
+EnclaveResponder/attestationClient/cbor/internal/*.o
+EnclaveResponder/attestationClient/utility/*.o
 util/fifo/*.o
 util/crypto/*.o
 util/crypto/secp256k1/*.o

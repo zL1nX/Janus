@@ -1,4 +1,4 @@
-#include "../Include/janus_util.h"
+#include "janus_util.h"
 
 #ifndef MIN
 #define MIN(a, b)               \
@@ -269,4 +269,13 @@ int A_message_buffering(uint8_t* buffer, const struct janus_msg_A* A, bool with_
         memcpy(buffer + JANUS_ID_LEN + 1 + sizeof(A->timestamp), &(A->nonce), JANUS_NONCE_LEN);
     }
     return SUCCESS;
+}
+
+void set_onchain_material(uint8_t *data_fromchain)
+{
+    // deconstruct and get measurement, key, cert
+
+    // then set different global variables
+
+    // this function should be called before the message verification
 }

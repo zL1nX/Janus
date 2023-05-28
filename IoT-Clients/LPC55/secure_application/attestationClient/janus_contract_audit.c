@@ -22,17 +22,31 @@ uint8_t* construct_audit_credentials(uint8_t* cr1, uint8_t* cr2, uint8_t* aid, u
 	return creds;
 }
 
-void submit_audit_credentials(uint8_t* out, uint8_t* cr1, uint8_t* cr2, uint8_t* aid, uint8_t* vid)
+int submit_audit_credentials(uint8_t* out, uint8_t* cr1, uint8_t* cr2, uint8_t* aid, uint8_t* vid)
 {
-	int size = 0;
-	uint8_t* pb_creds = construct_audit_credentials(cr1, cr2, aid, vid, &size);
-	// submit pb_condition to chain
-	char* address[] = {calculate_address_from_pairs(aid, vid)};
-	out = _wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credentials", size, pb_creds, 1, address, 1, address);
+	int payload_size = 0, data_size = 0;
+	uint8_t* pb_creds = construct_audit_credentials(cr1, cr2, aid, vid, &payload_size);
+
+	// submit pb_creds to chain
+	char* addr = assembleAddressFromPairs(AUDIT_FAMILY_NAME, aid, vid, strlen(aid));
+	char* addlist[] = {addr};
+
+	uint8_t* data = my_wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credentials", payload_size, pb_creds, &data_size, 1, addlist, 1, addlist);
+	for(int i = 0; i < 30; i++)
+	{
+		out[i] = data[i];
+		PRINTF("%x ", data[i]);
+	}
 	if(pb_creds != NULL)
 	{
 		free(pb_creds);
 	}
+	if(addr != NULL)
+	{
+		free(addr);
+	}
+
+	return data_size;
 }
 
 uint8_t* construct_audit_request(uint8_t* audit_id, uint8_t* aid, uint8_t* vid, int* size)
@@ -53,16 +67,35 @@ uint8_t* construct_audit_request(uint8_t* audit_id, uint8_t* aid, uint8_t* vid, 
 	return req;
 }
 
-void submit_audit_request(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t* vid)
+int submit_audit_request(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t* vid)
 {
-//	int size = 0;
-//	uint8_t* pb_audit_req = construct_audit_request(cr1, cr2, aid, vid, &size);
-//	// submit pb_condition to chain
-//	char* input_address[] = {calculate_address_from_pairs(aid, vid)};
-//	char* output_address[] = {calculate_address(audit_id)};
-//	out = _wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credentials", size, pb_audit_req, 1, input_address, 1, output_address);
-//	if(pb_audit_req != NULL)
-//	{
-//		free(pb_audit_req);
-//	}
+	int payload_size = 0, data_size = 0;
+	uint8_t* pb_audit_req = construct_audit_request(aid, vid, &payload_size);
+
+	// submit pb_audit_req to chain
+	char* input_address = assembleAddressFromPairs(AUDIT_FAMILY_NAME, aid, vid, strlen(aid));
+	char* input_list[] = {input_address};
+	char* output_address = assembleAddress(AUDIT_FAMILY_NAME, audit_id, strlen(audit_id));
+	char* output_list[] = {output_address};
+
+	uint8_t* data = my_wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_request", payload_size, pb_audit_req, &data_size, 1, input_list, 1, output_list);
+	for(int i = 0; i < 30; i++)
+	{
+		out[i] = data[i];
+		PRINTF("%x ", data[i]);
+	}
+	if(pb_audit_req != NULL)
+	{
+		free(pb_audit_req);
+	}
+	if(input_address != NULL)
+	{
+		free(input_address);
+	}
+	if(output_address != NULL)
+	{
+		free(output_address);
+	}
+
+	return data_size;
 }
