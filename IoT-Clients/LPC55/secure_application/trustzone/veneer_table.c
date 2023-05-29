@@ -16,6 +16,7 @@
 #include "fsl_debug_console.h"
 #include "janus_ns_api.h"
 #include "janus_contract_turnout.h"
+#include "janus_contract_attestation.h"
 //#include "attrmgr.h"
 
 /*******************************************************************************
@@ -159,4 +160,24 @@ __attribute__((cmse_nonsecure_entry)) void set_materials_onchain(uint8_t *input_
 __attribute__((cmse_nonsecure_entry)) int submit_device_condition_ns(uint8_t* out, int cond_int) {
 
 	return submit_device_condition(out, cond_int);
+}
+
+__attribute__((cmse_nonsecure_entry)) int submit_attestation_state_ns(uint8_t* out, char* aid, int cond_int) {
+
+	return submit_attestation_state(out, aid, cond_int);
+}
+
+__attribute__((cmse_nonsecure_entry)) int submit_attestation_challenge_ns(uint8_t* out, char* aid) {
+
+	return submit_attestation_challenge(out, aid);
+}
+
+__attribute__((cmse_nonsecure_entry)) int submit_attestation_response_ns(uint8_t* out) {
+
+	return submit_attestation_response(out);
+}
+
+__attribute__((cmse_nonsecure_entry)) int submit_verification_request_ns(uint8_t* out, char** aid_list) {
+
+	return submit_verification_request(out, aid_list);
 }

@@ -70,7 +70,7 @@ uint8_t* construct_audit_request(uint8_t* audit_id, uint8_t* aid, uint8_t* vid, 
 int submit_audit_request(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t* vid)
 {
 	int payload_size = 0, data_size = 0;
-	uint8_t* pb_audit_req = construct_audit_request(aid, vid, &payload_size);
+	uint8_t* pb_audit_req = construct_audit_request(audit_id, aid, vid, &payload_size);
 
 	// submit pb_audit_req to chain
 	char* input_address = assembleAddressFromPairs(AUDIT_FAMILY_NAME, aid, vid, strlen(aid));

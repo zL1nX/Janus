@@ -60,7 +60,10 @@ void construct_janus_message(uint8_t *output, int round);
 int verify_janus_message(uint8_t *input, int inlen, int round);
 void set_materials_onchain(uint8_t *payload_fromchain, int payload_len);
 int submit_device_condition_ns(uint8_t* out, int cond_int);
-
+int submit_attestation_state_ns(uint8_t* out, char* aid, int cond_int);
+int submit_attestation_challenge_ns(uint8_t* out, char* aid);
+int submit_attestation_response_ns(uint8_t* out);
+int submit_verification_request_ns(uint8_t* out, char** aid_list);
 
 //void trustQuerry2(char *output, int len);
 #endif /* _VENEER_TABLE_ */

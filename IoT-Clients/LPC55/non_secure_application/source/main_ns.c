@@ -100,32 +100,43 @@ void janus_chain_communication(void)
 
 void main_task(void *pvParameters)
 {
-    uint8_t dc_out[1000];
-    if (SYSTEM_Init() == pdPASS)
+    if (SYSTEM_Init() != pdPASS)
     {
-    	init_session_ns();
-        //checkRequest(&cr_out,1000);
-
-        int data_size = submit_device_condition_ns(&dc_out, ONLY_OFF_CHAIN);
-        configPRINTF(("%d\r\n", data_size));
-        for(int i = 0; i < 10; i++)
-        {
-     	   configPRINTF(("%x ", dc_out[i]));
-        }
-    	//janus_offchain_communication();
-    	//janus_chain_communication();
-//        if (initNetwork() != 0)
-//        {
-//            configPRINTF(("Network init failed, stopping task.\r\n"));
-//            vTaskDelete(NULL);
-//        }
-//        else
-//        {
-//        	janus_chain_communication();
-//        	//socket_test("10.168.1.180", 18083);
-//            //janus_offchain_communication();
-//        }
+        configPRINTF(("SYSTEM_Init Wrong\r\n"));
+        vTaskDelete(NULL);
     }
+    init_session_ns();
+
+    int data_size = 0;
+    uint8_t out[2000];
+    char* aid_list[3] = {"12341", "12342", "12343"};
+
+    // test for submit_device_condition_ns
+    //data_size = submit_device_condition_ns(out, ONLY_OFF_CHAIN);
+    // data_size = submit_attestation_state_ns(out, "1234", ONLY_OFF_CHAIN);
+    // data_size = submit_attestation_challenge_ns(out, "1234");
+    data_size = submit_attestation_response_ns(out);
+    // data_size = submit_verification_request_ns(out, aid_list);
+
+    configPRINTF(("%d\r\n", data_size));
+    for(int i = 0; i < 10; i++)
+    {
+        configPRINTF(("%x ", out[i]));
+    }
+
+    //janus_offchain_communication();
+    //janus_chain_communication();
+    // if (initNetwork() != 0)
+    // {
+    //     configPRINTF(("Network init failed, stopping task.\r\n"));
+    //     vTaskDelete(NULL);
+    // }
+    // else
+    // {
+    // janus_chain_communication();
+    // //socket_test("10.168.1.180", 18083);
+    //     //janus_offchain_communication();
+    // }
 
     vTaskDelete(NULL);
 }

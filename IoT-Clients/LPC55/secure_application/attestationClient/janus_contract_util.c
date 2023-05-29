@@ -106,9 +106,9 @@ uint8_t * my_wrap_and_send(char* name, char *action, int size, uint8_t *data, in
 	transaction_header.n_outputs = n_output;
 	transaction_header.outputs = output_address_list;
 
-	char *dependencies[] = { };
+	//char *dependencies[] = { };
 	transaction_header.n_dependencies = 0;
-	transaction_header.dependencies = dependencies;
+	transaction_header.dependencies = NULL;
 
 	char hash_of_transaction_header_payload[SHA512_DIGEST_LENGTH];
 	hash512(cborPayload, cborLength, hash_of_transaction_header_payload);
