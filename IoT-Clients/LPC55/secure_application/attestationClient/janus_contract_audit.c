@@ -1,5 +1,6 @@
 #include "janus_contract_audit.h"
 #include "janus_audit.pb-c.h"
+#include "fsl_debug_console.h"
 
 char* AUDIT_FAMILY_NAME = "audit";
 
@@ -59,10 +60,17 @@ void calculate_credential(uint8_t* aid, uint8_t* vid, bool is_attester, uint8_t*
 uint8_t* construct_audit_credential(uint8_t* aid, uint8_t* vid, bool is_attester, int* size)
 {
 	uint8_t* cred = NULL;
-	AuditCredential audit_cred;
+	AuditCredential audit_cred = AUDIT_CREDENTIAL__INIT;
 
 	uint8_t cred_calc[SHA512_DIGEST_LENGTH] = {0};
 	calculate_credential(aid, vid, is_attester, cred_calc);
+
+	PRINTF("credential: ");
+	for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
+	{
+		PRINTF("%x ", cred_calc[i]);
+	}
+	PRINTF("\r\n");
 
 	audit_cred.credential = (char*)cred_calc;
 	audit_cred.aid = aid;
@@ -83,7 +91,8 @@ int submit_audit_credential(uint8_t* out, uint8_t* aid, uint8_t* vid, bool is_at
 	uint8_t* pb_cred = construct_audit_credential(aid, vid, is_attester, &payload_size);
 
 	// submit pb_cred to chain
-	char* addr = assembleAddressFromPairs(AUDIT_FAMILY_NAME, aid, vid, strlen(aid));
+	char* addr = assembleAddressFromPairs(AUDIT_FAMILY_NAME, "1234", "5678", 4);
+	PRINTF("address: %s\r\n", addr);
 	char* addlist[] = {addr};
 
 	uint8_t* data = my_wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credential", payload_size, pb_cred, &data_size, 1, addlist, 1, addlist);
@@ -107,7 +116,7 @@ int submit_audit_credential(uint8_t* out, uint8_t* aid, uint8_t* vid, bool is_at
 uint8_t* construct_audit_request(uint8_t* audit_id, uint8_t* aid, uint8_t* vid, int* size)
 {
 	uint8_t* req = NULL;
-	AuditRequest audit_req;
+	AuditRequest audit_req = AUDIT_REQUEST__INIT;
 
 	audit_req.audit_id = audit_id;
 	audit_req.aid = aid;
@@ -132,6 +141,10 @@ int submit_audit_request(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t*
 	char* input_list[] = {input_address};
 	char* output_address = assembleAddress(AUDIT_FAMILY_NAME, audit_id, strlen(audit_id));
 	char* output_list[] = {output_address};
+
+	PRINTF("input address: %s\r\n", input_address);
+	PRINTF("output address: %s\r\n", output_address);
+
 
 	uint8_t* data = my_wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_request", payload_size, pb_audit_req, &data_size, 1, input_list, 1, output_list);
 	for(int i = 0; i < 30; i++)

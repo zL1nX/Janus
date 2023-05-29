@@ -7,6 +7,7 @@
 #define _VENEER_TABLE_
 
 #include <stdint.h>
+#include <stdbool.h>
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -64,6 +65,8 @@ int submit_attestation_state_ns(uint8_t* out, char* aid, int cond_int);
 int submit_attestation_challenge_ns(uint8_t* out, char* aid);
 int submit_attestation_response_ns(uint8_t* out);
 int submit_verification_request_ns(uint8_t* out, char** aid_list);
+int submit_audit_request_ns(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t* vid);
+int submit_audit_credential_ns(uint8_t* out, uint8_t* aid, uint8_t* vid, bool is_attester);
 
 //void trustQuerry2(char *output, int len);
 #endif /* _VENEER_TABLE_ */

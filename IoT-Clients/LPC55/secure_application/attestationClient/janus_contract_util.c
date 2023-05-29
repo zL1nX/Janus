@@ -68,8 +68,8 @@ char* assembleAddressFromPairs(const char* name, uint8_t *elem1, uint8_t *elem2,
 	int8_to_char(hashelem2, SHA512_DIGEST_LENGTH, string_of_hashelem2);
 
 	strncpy(assembledAddress, string_of_hashoffamilyname, 6);
-	strncat(assembledAddress, hashelem1, 32);
-	strncat(assembledAddress, hashelem2, 32);
+	strncat(assembledAddress, string_of_hashelem1, 32);
+	strncat(assembledAddress, string_of_hashelem2, 32);
 
 	assembledAddress[70] = '\0';
 

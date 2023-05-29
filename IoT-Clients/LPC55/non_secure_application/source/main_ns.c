@@ -112,11 +112,14 @@ void main_task(void *pvParameters)
     char* aid_list[3] = {"12341", "12342", "12343"};
 
     // test for submit_device_condition_ns
-    //data_size = submit_device_condition_ns(out, ONLY_OFF_CHAIN);
+    // data_size = submit_device_condition_ns(out, ONLY_OFF_CHAIN);
     // data_size = submit_attestation_state_ns(out, "1234", ONLY_OFF_CHAIN);
     // data_size = submit_attestation_challenge_ns(out, "1234");
-    data_size = submit_attestation_response_ns(out);
+    // data_size = submit_attestation_response_ns(out);
     // data_size = submit_verification_request_ns(out, aid_list);
+    //data_size = submit_audit_credential_ns(out, "1234", "1234", false);
+    data_size = submit_audit_request_ns(out, "deadbeaf", "1234", "5678");
+
 
     configPRINTF(("%d\r\n", data_size));
     for(int i = 0; i < 10; i++)

@@ -11,12 +11,14 @@
 #endif
 
 #include "stdint.h"
+#include <stdbool.h>
 #include "arm_cmse.h"
 #include "veneer_table.h"
 #include "fsl_debug_console.h"
 #include "janus_ns_api.h"
 #include "janus_contract_turnout.h"
 #include "janus_contract_attestation.h"
+#include "janus_contract_audit.h"
 //#include "attrmgr.h"
 
 /*******************************************************************************
@@ -180,4 +182,16 @@ __attribute__((cmse_nonsecure_entry)) int submit_attestation_response_ns(uint8_t
 __attribute__((cmse_nonsecure_entry)) int submit_verification_request_ns(uint8_t* out, char** aid_list) {
 
 	return submit_verification_request(out, aid_list);
+}
+
+
+__attribute__((cmse_nonsecure_entry)) int submit_audit_request_ns(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t* vid) {
+
+	return submit_audit_request(out, audit_id, aid, vid);
+}
+
+
+__attribute__((cmse_nonsecure_entry)) int submit_audit_credential_ns(uint8_t* out, uint8_t* aid, uint8_t* vid, bool is_attester) {
+
+	return submit_audit_credential(out, aid, vid, is_attester);
 }
