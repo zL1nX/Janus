@@ -11,7 +11,7 @@
 #include "fsl_power.h"
 #include "network_communication.h"
 #include "janus_communication_ns.h"
-
+#include <time.h>
 
 
 #include "clock_config.h"
@@ -40,6 +40,38 @@ typedef void (*funcptr_t)(char const *s);
  ******************************************************************************/
 uint32_t testCaseNumber;
 
+/* DWT (Data Watchpoint and Trace) registers, only exists on ARM Cortex with a DWT unit */
+#define KIN1_DWT_CONTROL             (*((volatile uint32_t*)0xE0001000))
+/*!< DWT Control register */
+#define KIN1_DWT_CYCCNTENA_BIT       (1UL<<0)
+/*!< CYCCNTENA bit in DWT_CONTROL register */
+#define KIN1_DWT_CYCCNT              (*((volatile uint32_t*)0xE0001004))
+/*!< DWT Cycle Counter register */
+#define KIN1_DEMCR                   (*((volatile uint32_t*)0xE000EDFC))
+/*!< DEMCR: Debug Exception and Monitor Control Register */
+#define KIN1_TRCENA_BIT              (1UL<<24)
+
+
+#define KIN1_InitCycleCounter() \
+  KIN1_DEMCR |= KIN1_TRCENA_BIT
+  /*!< TRCENA: Enable trace and debug block DEMCR (Debug Exception and Monitor Control Register */
+ 
+#define KIN1_ResetCycleCounter() \
+  KIN1_DWT_CYCCNT = 0
+  /*!< Reset cycle counter */
+ 
+#define KIN1_EnableCycleCounter() \
+  KIN1_DWT_CONTROL |= KIN1_DWT_CYCCNTENA_BIT
+  /*!< Enable cycle counter */
+ 
+#define KIN1_DisableCycleCounter() \
+  KIN1_DWT_CONTROL &= ~KIN1_DWT_CYCCNTENA_BIT
+  /*!< Disable cycle counter */
+ 
+#define KIN1_GetCycleCounter() \
+  KIN1_DWT_CYCCNT
+  /*!< Read cycle counter register */
+    /*!< Trace enable bit in DEMCR register */
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -111,21 +143,33 @@ void main_task(void *pvParameters)
     uint8_t out[2000];
     char* aid_list[3] = {"12341", "12342", "12343"};
 
+    uint32_t a = 0, b = 0; /* number of cycles */
+
+    KIN1_InitCycleCounter(); /* enable DWT hardware */
+    KIN1_ResetCycleCounter(); /* reset cycle counter */
+    KIN1_EnableCycleCounter(); /* start counting */
+
     // test for submit_device_condition_ns
+    for(int i = 0; i < 3; i++)
+    {   
+        a = KIN1_GetCycleCounter(); /* get cycle counter */
+        data_size = submit_audit_request_ns(out, "deadbeaf", "1234", "5678");
+        b = KIN1_GetCycleCounter(); /* get cycle counter */
+        configPRINTF(("Time: %d cycles\r\n", b - a));
+    }
+    KIN1_DisableCycleCounter(); /* disable counting if not used any more */
+
     // data_size = submit_device_condition_ns(out, ONLY_OFF_CHAIN);
     // data_size = submit_attestation_state_ns(out, "1234", ONLY_OFF_CHAIN);
     // data_size = submit_attestation_challenge_ns(out, "1234");
     // data_size = submit_attestation_response_ns(out);
     // data_size = submit_verification_request_ns(out, aid_list);
     //data_size = submit_audit_credential_ns(out, "1234", "1234", false);
-    data_size = submit_audit_request_ns(out, "deadbeaf", "1234", "5678");
+    // data_size = submit_audit_request_ns(out, "deadbeaf", "1234", "5678");
+    //uint32_t end = SysTick->VAL;
 
+    configPRINTF(("data_size: %d\r\n", data_size));
 
-    configPRINTF(("%d\r\n", data_size));
-    for(int i = 0; i < 10; i++)
-    {
-        configPRINTF(("%x ", out[i]));
-    }
 
     //janus_offchain_communication();
     //janus_chain_communication();

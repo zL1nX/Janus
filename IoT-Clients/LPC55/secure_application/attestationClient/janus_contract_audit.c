@@ -65,12 +65,12 @@ uint8_t* construct_audit_credential(uint8_t* aid, uint8_t* vid, bool is_attester
 	uint8_t cred_calc[SHA512_DIGEST_LENGTH] = {0};
 	calculate_credential(aid, vid, is_attester, cred_calc);
 
-	PRINTF("credential: ");
-	for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
-	{
-		PRINTF("%x ", cred_calc[i]);
-	}
-	PRINTF("\r\n");
+	// PRINTF("credential: ");
+	// for(int i = 0; i < SHA512_DIGEST_LENGTH; i++)
+	// {
+	// 	PRINTF("%x ", cred_calc[i]);
+	// }
+	// PRINTF("\r\n");
 
 	audit_cred.credential = (char*)cred_calc;
 	audit_cred.aid = aid;
@@ -92,7 +92,7 @@ int submit_audit_credential(uint8_t* out, uint8_t* aid, uint8_t* vid, bool is_at
 
 	// submit pb_cred to chain
 	char* addr = assembleAddressFromPairs(AUDIT_FAMILY_NAME, "1234", "5678", 4);
-	PRINTF("address: %s\r\n", addr);
+	//PRINTF("address: %s\r\n", addr);
 	char* addlist[] = {addr};
 
 	uint8_t* data = my_wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_credential", payload_size, pb_cred, &data_size, 1, addlist, 1, addlist);
@@ -142,15 +142,15 @@ int submit_audit_request(uint8_t* out, uint8_t* audit_id, uint8_t* aid, uint8_t*
 	char* output_address = assembleAddress(AUDIT_FAMILY_NAME, audit_id, strlen(audit_id));
 	char* output_list[] = {output_address};
 
-	PRINTF("input address: %s\r\n", input_address);
-	PRINTF("output address: %s\r\n", output_address);
+	// PRINTF("input address: %s\r\n", input_address);
+	// PRINTF("output address: %s\r\n", output_address);
 
 
 	uint8_t* data = my_wrap_and_send(AUDIT_FAMILY_NAME, "submit_audit_request", payload_size, pb_audit_req, &data_size, 1, input_list, 1, output_list);
-	for(int i = 0; i < 30; i++)
+	for(int i = 0; i < data_size; i++)
 	{
 		out[i] = data[i];
-		PRINTF("%x ", data[i]);
+		//PRINTF("%x ", data[i]);
 	}
 	if(pb_audit_req != NULL)
 	{

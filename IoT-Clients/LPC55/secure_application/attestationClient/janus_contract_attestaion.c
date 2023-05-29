@@ -81,12 +81,12 @@ int generate_encrypted_meas_report(uint8_t* report, int report_size)
 	AES_init_ctx_iv(&ctx, g_client.personal_key, iv);
 	AES_CTR_xcrypt_buffer(&ctx, report, report_size);
 
-	PRINTF("encrypted report: ");
-	for(int i = 0; i < report_size; i++)
-	{
-		PRINTF("%x ", report[i]);
-	}
-	PRINTF("\r\n");
+	// PRINTF("encrypted report: ");
+	// for(int i = 0; i < report_size; i++)
+	// {
+	// 	PRINTF("%x ", report[i]);
+	// }
+	// PRINTF("\r\n");
 
 	return SUCCESS;
 }
@@ -113,13 +113,13 @@ uint8_t* construct_attestation_report(int* size)
 	report__pack(&att_report, report);
 	*size = length;
 
-	PRINTF("attestation report size: %d\r\n", *size);
+	// PRINTF("attestation report size: %d\r\n", *size);
 
-	for(int i = 0; i < length; i++)
-	{
-		PRINTF("%x ", report[i]);
-	}
-	PRINTF("\r\n");
+	// for(int i = 0; i < length; i++)
+	// {
+	// 	PRINTF("%x ", report[i]);
+	// }
+	// PRINTF("\r\n");
 
 	return report;
 }
@@ -139,7 +139,7 @@ int submit_attestation_response(uint8_t* out)
 	for(int i = 0; i < data_size; i++)
 	{
 		out[i] = data[i];
-		if(i <= 30) PRINTF("%x ", data[i]);
+		//if(i <= 30) PRINTF("%x ", data[i]);
 	}
 	if(pb_response != NULL)
 	{
