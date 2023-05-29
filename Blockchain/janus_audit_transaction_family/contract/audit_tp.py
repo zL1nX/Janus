@@ -45,9 +45,21 @@ LOGGER = logging.getLogger(__name__)
 
 FAMILY_NAME = "audit"
 
+ATTESTER_MEASUREMENT = "f05b5bd660c52e61969150db79cf5a887dcb187e04c7bbe542f46152bbb48c2e"
+ATTESTER_KS = "75d573976a977ba45df5a17c9d9b0c66"
+ATTESTER_KG = "e35c7160ec6385d16ffb6d12e027678b"
+VERIFIER_MEASUREMENT = "4558715731e23bad3b8a4599493506c21af7c67c248160119269c5b1de4deb26"
+VERIFIER_KS = "b5fbe2160e9a507523818e75351f7076"
+VERIFIER_KG = "2733cc6ef145dd9d4fc70fbb95e4c4e7"
+
 def _hash(data):
     return hashlib.sha512(data).hexdigest()
 
+def _calculateCredential(aid, vid, is_attester):
+    if is_attester:
+        return _hash(_hash(ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid + VERIFIER_KS) + ATTESTER_KG)
+    else:
+        return _hash(_hash(ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid + ATTESTER_KS) + VERIFIER_KG)
 
 class AuditTransactionHandler(TransactionHandler):
 
@@ -96,8 +108,8 @@ class AuditTransactionHandler(TransactionHandler):
 
 		# Select the appropriate action
 
-        if action == "submit_audit_credentials":
-            address = handle_audit_credentials(context, payload)
+        if action == "submit_audit_credential":
+            address = handle_audit_credential(context, payload)
             LOGGER.info("Credentials Address = %s", address)
         elif action == "submit_audit_request":
             address = handle_audit_request(context, payload)
@@ -126,24 +138,31 @@ class AuditTransactionHandler(TransactionHandler):
 
 
 # Write the credentials database
-def handle_audit_credentials(context, payload):
-    l = janus_audit_pb2.Credentials()
+def handle_audit_credential(context, payload):
+    l = janus_audit_pb2.AuditCredential()
     l.ParseFromString(payload)
 
-    credentials = (l.credential1, l.credential2)
-
+    credential = l.credential
     address = _assembleAddressFromPair(l.aid, l.vid) # 地址必须与提交时对应, 否则会unauthorized address
-    LOGGER.info('Credentials are saved at address: %s',
+
+    state_entries = context.get_state([address])
+    if len(state_entries) != 0:
+        LOGGER.info('Attester credential has already been saved at address: %s',
+            address)
+        credentials = state_entries[0].data
+    credentials.append(credential)
+
+    LOGGER.info('Credential is saved at address: %s',
                 address)
     addresses = context.set_state({address: credentials})
-    LOGGER.info('The Audit Credentials are stored')
+    LOGGER.info('The Audit Credential is stored')
     return addresses
 
 def handle_verification_request(context, payload):
     l = janus_audit_pb2.AuditRequest()
     l.ParseFromString(payload)
 
-    results = audit_credentials(context, l.aid, l.vid).encode()
+    results = verify_audit_credentials(context, l.aid, l.vid).encode()
 
     address = _assembleAddress(l.audit_id) # 地址必须与提交时对应, 否则会unauthorized address
     LOGGER.info('Request is saved at address: %s',
@@ -153,17 +172,24 @@ def handle_verification_request(context, payload):
 
     return addresses
 
-def audit_credentials(context, aid, vid):
+def verify_audit_credentials(context, aid, vid):
     audit_results = {}
     target = _assembleAddressFromPair(aid, vid)
     state_entries = context.get_state([target])
     credentials = state_entries[0].data
+    if len(credentials) != 2:
+        LOGGER.info('Not enough credentials at address: %s', address)
     print(credentials)
     cr1 = credentials[0]
     cr2 = credentials[1]
     # perform audit here, which should be a double-hash of the reference value `m1||m2||aid||vid`
     # in comparison with the submitted ones
-    audit_results[aid + '-' + vid] = True
+    ref_cr1 = _calculateCredential(aid, vid, is_attester=True)
+    ref_cr2 = _calculateCredential(aid, vid, is_attester=False)
+    if cr1 == ref_cr1 and cr2 == ref_cr2:
+        audit_results[aid + '-' + vid] = True
+    else:
+        audit_results[aid + '-' + vid] = False
     return json.dumps(audit_results)
 
 # Assemble storage addresses

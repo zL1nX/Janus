@@ -30,7 +30,7 @@
 
 ## audit
 
-- attester/verifier(通过aggregator)上传一组credentials `python3 ./audit.py credentials <cr1> <cr2> <aid> <vid>`
+- attester上传credential `python3 ./audit.py credential <aid> <vid> --attester`; verifier上传credential `python3 ./audit.py credential <aid> <vid> --verifier`
 
 - participant指定(aid, vid)进行审查 `python3 ./audit.py audit <audit_id> <aid> <vid>`
 

@@ -104,12 +104,12 @@ class AuditClient(object):
     def getPublicKey(self):
         return self._public_key
 
-    def submit_audit_credentials(self, credentials, aid, vid):
+    def submit_audit_credential(self, credential, aid, vid):
         storageAddress = _assembleAddressFromPair(aid, vid)
         LOGGER.info('Storage Address %s.',
                 storageAddress)
         address_list = [storageAddress] # only need this
-        return self._wrap_and_send("submit_audit_credentials", credentials, address_list, address_list, wait=10)
+        return self._wrap_and_send("submit_audit_credential", credential, address_list, address_list, wait=10)
 
     def submit_audit_request(self, audit_request, audit_id, aid, vid):
         storageAddress = _assembleAddress(audit_id)

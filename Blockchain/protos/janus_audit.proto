@@ -10,11 +10,10 @@ message AuditRequest {
 
 message Credentials {
     string nonce = 1;
-    string credential1 = 2;
-    string credential2 = 3;
-    string aid = 4;
-    string vid = 5;
-    string ssid = 6;
+    string credential = 2;
+    string aid = 3;
+    string vid = 4;
+    string ssid = 5;
 }
 
 message AuditResult {
