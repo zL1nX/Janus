@@ -22,11 +22,11 @@
 
 ## attestation
 
-- 一个verifier 5678对三个attester 12341, 12342, 12343进行challenge `python3 ./attestation.py challenge 12341 5678 && python3 ./attestation.py challenge 12342 5678 && python3 ./attestation.py challenge 12343 5678`
+- 一个verifier 5678对三个attester 12341, 12342, 12343进行challenge `python3 ./attestation.py challenge 953623c8b388b4459e13f978d7c846f400010003 5678 && python3 ./attestation.py challenge 12342 5678 && python3 ./attestation.py challenge 12343 5678`
 
-- 三个attester返回response`python3 ./attestation.py response 12341 && python3 ./attestation.py response 12342 && python3 ./attestation.py response 12343`
+- 三个attester返回response`python3 ./attestation.py response 953623c8b388b4459e13f978d7c846f400010003 && python3 ./attestation.py response 12342 && python3 ./attestation.py response 12343`
 
-- verifier指定aid进行验证 `python3 ./attestation.py verify 5678 --aidlist 12341 12342 12343`
+- verifier指定aid进行验证 `python3 ./attestation.py verify 5678 --aidlist 953623c8b388b4459e13f978d7c846f400010003 12342 12343`
 
 ## audit
 

@@ -32,12 +32,15 @@ import yaml
 import os
 import cbor
 import logging
+from Crypto.Cipher import AES
 
 from sawtooth_sdk.protobuf import events_pb2
 from sawtooth_signing import create_context
 from sawtooth_signing import CryptoFactory
 from sawtooth_signing import ParseError
+
 from sawtooth_signing.secp256k1 import Secp256k1PrivateKey
+from sawtooth_signing.secp256k1 import Secp256k1PublicKey
 from sawtooth_sdk.protobuf.transaction_pb2 import TransactionHeader
 from sawtooth_sdk.protobuf.transaction_pb2 import Transaction
 from sawtooth_sdk.protobuf.batch_pb2 import BatchList
@@ -48,6 +51,7 @@ LOGGER = logging.getLogger(__name__)
 
 FAMILY_NAME = 'attestation'
 JANUS_NONCE_LEN = 8
+G_MEASUREMENT = b'\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10'
 # TF Prefix is first 6 characters of SHA-512("attestation"), FADC96
 
 # Hashing helper method
@@ -70,6 +74,8 @@ class AttestationClient(object):
         '''
         self._base_url = _base_url
         self.device_id = device_id
+        self.communication_key = b'u\xd5s\x97j\x97{\xa4]\xf5\xa1|\x9d\x9b\x0cf'
+        self.att_privkey = b'\xe3(h3\x1f\xa8\xef\x018\xde\r\xe8Tx4j\xec^9\x12\xb6\x02\x9a\xe7\x16\x91\xc3\x84#z>\xeb'
        
         if key_file is None:
             self._signer = None
@@ -92,28 +98,18 @@ class AttestationClient(object):
         self._signer = CryptoFactory(create_context('secp256k1')) \
             .new_signer(private_key)
         self._public_key = self._signer.get_public_key().as_hex()
-
-
         self._address = _hash(FAMILY_NAME.encode('utf-8'))[0:6] + \
             _hash(self._public_key.encode('utf-8'))[0:64]
+        
+        self.att_signer = CryptoFactory(create_context('secp256k1')).new_signer(Secp256k1PrivateKey.from_bytes(self.att_privkey))
+        self.att_pubkey = self.att_signer.get_public_key().as_hex()
+        LOGGER.info("client att pubkey")
+        LOGGER.info(self.att_pubkey)
+
 
     def getPublicKey(self):
         return self._public_key
 
-    # def submitEvidence(self, evidence, storageKey):
-    #     '''Submit Attestation Evidence to validator.'''
-    #     # Access to administrative databases must be defined
-    #     administrationAddresses = ['5a7526f43437fca1d5f3d0381073ed3eec9ae42bf86988559e98009795a969919cbeca',
-    #                                '5a75264f03016f8dfef256580a4c6fdeeb5aa0ca8b4068e816a677e908c95b3bdd2150']
-    #     storageAddress = _assembleAddress(storageKey)
-    #     LOGGER.info('Storage Address %s.',
-    #             storageAddress)
-    #     # Allow access to block-info data and the administration transaction family namespace
-    #     input_address_list = ['00b10c00', '00b10c01', storageAddress]
-    #     input_address_list.extend(administrationAddresses)
-    #     output_address_list = ['00b10c00', '00b10c01', storageAddress]
-    #     return self._wrap_and_send("submitEvidence", evidence, input_address_list, output_address_list, wait=10)
-    
     def submit_challenge(self, challenge, device_id):
 
         storageAddress = _assembleAddress(device_id)
@@ -129,6 +125,17 @@ class AttestationClient(object):
         result = self._query_state(queryAddress)
         return result
     
+    def generate_encrypted_payload(self, nonce):
+        # sign the measurement and AES encrypt
+        sig = self.att_signer.sign(G_MEASUREMENT)
+        cipher = AES.new(self.communication_key, AES.MODE_CTR)
+        plain = nonce + G_MEASUREMENT + bytes.fromhex(sig)
+        c = cipher.encrypt(plain)
+        ret = cipher.nonce.hex() + c.hex()
+        LOGGER.info(ret)
+
+        return ret
+
     def submit_attestation_response(self, att_response, device_id):
         storageAddress = _assembleAddress(device_id)
         LOGGER.info('Storage Address %s.',

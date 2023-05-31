@@ -39,6 +39,7 @@ apt-get update \
 	python3-pip \
  && apt-get clean \
  && pip3 install -U protobuf==3.14.0 \
+ && pip3 install -U pympler \
  && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 4004/tcp

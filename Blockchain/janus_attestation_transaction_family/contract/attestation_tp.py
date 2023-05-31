@@ -28,8 +28,15 @@ import sys
 import hashlib
 import json
 import logging
+from time import process_time
 import cbor
+from Crypto.Cipher import AES
 
+from sawtooth_signing import create_context
+from sawtooth_signing import CryptoFactory
+from sawtooth_signing import ParseError
+from sawtooth_signing.secp256k1 import Secp256k1PrivateKey
+from sawtooth_signing.secp256k1 import Secp256k1PublicKey
 
 from sawtooth_sdk.processor.handler import TransactionHandler
 from sawtooth_sdk.processor.exceptions import InvalidTransaction
@@ -44,6 +51,9 @@ DEFAULT_URL = 'tcp://validator:4004'
 LOGGER = logging.getLogger(__name__)
 
 FAMILY_NAME = "attestation"
+G_HASH_MEASUREMENT = b'\xf0[[\xd6`\xc5.a\x96\x91P\xdby\xcfZ\x88}\xcb\x18~\x04\xc7\xbb\xe5B\xf4aR\xbb\xb4\x8c.'
+ATT_COMM_KEY = b'u\xd5s\x97j\x97{\xa4]\xf5\xa1|\x9d\x9b\x0cf'
+ATT_PUBKEY = b'\x02\x86\xb1\xaaQ \xf0yYCH\xc6vGg\x9ez\xc4\xc3e\xb2\xc0\x130\xdbx+\x0b\xa6\x11\xc1\xd6w'
 
 def _hash(data):
     return hashlib.sha512(data).hexdigest()
@@ -72,22 +82,10 @@ class AttestationTransactionHandler(TransactionHandler):
         return [self._namespace_prefix]
 
     def apply(self, transaction, context):
-        '''This implements the apply function for the TransactionHandler class.
 
-           The apply function does most of the work for this class by
-           processing a transaction for the administration transaction family.
-        '''
-
-        # Get the payload and extract the administration-specific information.
-        # Payload needs to be cbor decoded and split into action and actual (inner) payload
         header = transaction.header        
         action, payload = self._decode_transaction(transaction.payload)
 
-        # Get the signer's public key, sent in the header from the client.
-        sender = header.signer_public_key
-
-        # Enable transaction receipts
-        b = bytes("adminData", 'utf-8')
         context.add_receipt_data(transaction.payload)
 
         # Perform the action.
@@ -100,9 +98,13 @@ class AttestationTransactionHandler(TransactionHandler):
             address = handle_attestation_challenge(context, payload)
             LOGGER.info("Devices Address = %s", address)
         elif action == "submit_attestation_response":
+            t = process_time()
             address = handle_attestation_response(context, payload)
+            LOGGER.info("response time %f", process_time() - t)
         elif action == "submit_verification_request":
+            t = process_time()
             address = handle_verification_request(context, payload)
+            LOGGER.info("verify time %f", process_time() - t)
         else:
             LOGGER.info("Unhandled action. Action not legal!")
 
@@ -174,14 +176,35 @@ def handle_verification_request(context, payload):
 def verify_response(context, aidlist):
     verify_results = {}
     for id in aidlist:
+        LOGGER.info(id)
         target = _assembleAddress(id)
         state_entries = context.get_state([target])
         if state_entries == []:
             LOGGER.info('No report for %s', id)
             continue
         print(state_entries[0].data)
-        verify_results[id] = True # perform verification here
+        verify_results[id] = verify_measurement(state_entries[0].data, id)
+         # perform verification here
     return json.dumps(verify_results)
+
+def verify_measurement(cipher_bytes, aid):
+    test_cipher = AES.new(ATT_COMM_KEY, AES.MODE_CTR, nonce=cipher_bytes[:8])
+    test_plain = test_cipher.decrypt(cipher_bytes[8:])
+    meas, test_sig = test_plain[8:24], test_plain[24:]
+
+    context = create_context('secp256k1')
+    result = context.verify(test_sig, meas, Secp256k1PublicKey.from_bytes(ATT_PUBKEY))
+    if result is False:
+        LOGGER.info("Signature Invalid")
+        return result
+    LOGGER.info(aid)
+    result = (hashlib.sha256(meas + aid.encode() + b'\xff').digest() == G_HASH_MEASUREMENT)
+    if result is False:
+        LOGGER.info("Measurement Invalid")
+        return result
+
+    LOGGER.info("Attestation Passed")
+    return result
 
 # Assemble storage addresses
 def _assembleAddress(storage_target):

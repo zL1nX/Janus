@@ -84,6 +84,7 @@ RUN echo "deb http://repo.sawtooth.me/ubuntu/nightly bionic universe" >> /etc/ap
     python3-sawtooth-cli \
  && apt-get clean \
  && pip3 install -U protobuf==3.14.0 \
+ && pip3 install -U pycryptodome \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /project/attestation_management/janus_attestation_transaction_family/client

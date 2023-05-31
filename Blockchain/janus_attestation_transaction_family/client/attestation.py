@@ -34,6 +34,7 @@ import sys
 import traceback
 import json
 import janus_attestation_pb2
+from time import process_time, sleep
 
 
 from decimal import Decimal
@@ -159,32 +160,31 @@ def construct_attestation_challenge(nonce, aid, vid):
 def set_attestation_response(args):
     privkeyfile = _get_private_keyfile(KEY_NAME)
     client = AttestationClient(_base_url=DEFAULT_URL, device_id=args.aid, key_file=privkeyfile)
-    check_result = client.query_challenge(args.aid)
-    if is_json(check_result):
-        LOGGER.info("Valid Results")
-        challenge_nonce = extract_nonce(check_result)
-        print(challenge_nonce)
-        att_response = construct_attestation_response(challenge_nonce, args.aid)
-        response = client.submit_attestation_response(att_response, args.aid)
-        print("Set Attestation Response: {}".format(response))
-    else:
-        LOGGER.info("no challenge yet")
+    # check_result = client.query_challenge(args.aid)
+    # if is_json(check_result) is False:
+    #     LOGGER.info("no challenge yet")
+    #     return 0
+
+    # LOGGER.info("Valid Results")
+    # challenge_nonce = extract_nonce(check_result)
+
+    challenge_nonce = os.urandom(8)
+    print(challenge_nonce)
+    encrypted_response = client.generate_encrypted_payload(challenge_nonce)
+    att_response = construct_attestation_response(encrypted_response, args.aid)
+    response = client.submit_attestation_response(att_response, args.aid)
+    print("Set Attestation Response: {}".format(response))
+        
     # then submit challenge
     return 1
 
-def construct_attestation_response(nonce, device_id):
-    payload = construct_attestation_payload(nonce, device_id)
+def construct_attestation_response(content, device_id):
     response = janus_attestation_pb2.Report (
-        payload = payload,
+        payload = content,
         aid = device_id
     ).SerializeToString()
     return response
 
-def construct_attestation_payload(nonce, device_id):
-    measurement = ""
-    test_aes_key = ""
-    ciphertext = ""
-    return "f0e4c2f76c58916ec258f246851bea091d14d4247a2fc3e18694461b1816e13b"
 
 def set_verification_request(args):
     privkeyfile = _get_private_keyfile(KEY_NAME)
@@ -201,38 +201,6 @@ def construct_verification_request(aidlist, vid):
         aid = aidlist
     ).SerializeToString()
     return vrfy_request
-
-# def CheckRequest(args):
-#     privkeyfile = _get_private_keyfile(KEY_NAME)
-#     client = AttestationManagerClient(broker=broker,port=port, device_id=args.proverID, key_file=privkeyfile)
-#     queryBytes = buildCheckRequestPayload(args.proverID)
-#     response = client.submitCheckRequest(queryBytes)
-#     print("Check Request Result: {}".format(response))
-
-
-# # Command to handle a trust query from the command line
-# def trustQuery(args):
-#     privkeyfile = _get_private_keyfile(KEY_NAME)
-#     client = AttestationManagerClient(broker=broker,port=port, device_id=args.trustor, key_file=privkeyfile)
-#     queryBytes = buildTrustQueryPayload(args.trustor, args.trustee)
-#     response = client.submitTrustQuery(queryBytes)
-#     print("Trust Query Result: {}".format(response))
-
-
-# # Builder method for the trust query object (protobuf)
-# def buildTrustQueryPayload(trustor, trustee):
-#     trustQuery = trust_query_pb2.TrustQuery(
-#         Trustor = trustor,
-#         Trustee = trustee,
-#         #MinReliability = Decimal(minReliability)
-#     ).SerializeToString()
-#     return trustQuery
-
-# def buildCheckRequestPayload(deviceID):
-#     checkRequest = check_request_pb2.Checkrequest(
-#         DeviceID=deviceID,
-#     ).SerializeToString()
-#     return checkRequest
 
 
 # Load the private keyfile

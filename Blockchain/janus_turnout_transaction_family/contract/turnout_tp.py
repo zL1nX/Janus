@@ -29,7 +29,7 @@ import hashlib
 import json
 import logging
 import cbor
-
+from time import process_time
 
 from sawtooth_sdk.processor.handler import TransactionHandler
 from sawtooth_sdk.processor.exceptions import InvalidTransaction
@@ -38,18 +38,17 @@ from sawtooth_sdk.processor.core import TransactionProcessor
 
 import janus_turnout_pb2
 
-
+FAMILY_NAME = "turnout"
 DEFAULT_URL = 'tcp://validator:4004'
 
 LOGGER = logging.getLogger(__name__)
 
-FAMILY_NAME = "turnout"
 
 def _hash(data):
     return hashlib.sha512(data).hexdigest()
 
 
-class AttestationTransactionHandler(TransactionHandler):
+class TurnoutTransactionHandler(TransactionHandler):
 
     def __init__(self, namespace_prefix):
 
@@ -72,35 +71,21 @@ class AttestationTransactionHandler(TransactionHandler):
         return [self._namespace_prefix]
 
     def apply(self, transaction, context):
-        '''This implements the apply function for the TransactionHandler class.
-
-           The apply function does most of the work for this class by
-           processing a transaction for the administration transaction family.
-        '''
 
         # Get the payload and extract the administration-specific information.
         # Payload needs to be cbor decoded and split into action and actual (inner) payload
         header = transaction.header        
         action, payload = self._decode_transaction(transaction.payload)
 
-        # Get the signer's public key, sent in the header from the client.
-        sender = header.signer_public_key
-
-        # Enable transaction receipts
-        b = bytes("adminData", 'utf-8')
-        context.add_receipt_data(transaction.payload)
-
-        # Perform the action.
-        LOGGER.info("Action = %s.", action)
-        LOGGER.info("Payload = %s.", payload)
-		
-		# Select the appropriate action
-
         if action == "change_device_condition":
+            t = process_time()
             address = handle_device_condition(context, payload)
+            LOGGER.info("DC time: %f", process_time() - t)
             LOGGER.info("Devices Address = %s", address)
         elif action == "set_attestation_state":
+            t = process_time()
             address = handle_attestation_state(context, payload)
+            LOGGER.info("AS time: %f", process_time() - t)
         else:
             LOGGER.info("Unhandled action. Action not legal!")
 
@@ -168,11 +153,12 @@ def main():
         # Setup logging for this class.
         logging.basicConfig()
         logging.getLogger().setLevel(logging.DEBUG)
+        #LOGGER.propagate = False
 
         # Register the Transaction Handler and start it.
         processor = TransactionProcessor(url=DEFAULT_URL)
         sw_namespace = _hash(FAMILY_NAME.encode('utf-8'))[0:6]
-        handler = AttestationTransactionHandler(sw_namespace)
+        handler = TurnoutTransactionHandler(sw_namespace)
         processor.add_handler(handler)
         processor.start()
     except KeyboardInterrupt:
