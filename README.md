@@ -1,4 +1,4 @@
-#  SCRAPS: Scalable Collective Remote Attestation for Pub-Sub IoT Networks with Untrusted Proxy Verifier
+#  Teamwork Makes TEE Work: Open and Resilient Remote Attestation on Decentralized Trust
 
 
 
