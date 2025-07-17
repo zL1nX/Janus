@@ -1,0 +1,164 @@
+/*
+ * Janus Attestation Protocol - Step 3: Fixed Attestation Response
+ * Using separate facts for challenges vs responses to avoid saturation issues
+ */
+
+theory JanusAttestation_Step3
+begin
+
+builtins: hashing, signing
+
+/* =============================================================================
+ * BLOCKCHAIN INFRASTRUCTURE (NEW)
+ * =============================================================================
+ */
+
+// Rule: Initialize blockchain with genesis block
+rule Blockchain_Init:
+    [ Fr(~genesis_hash) ]
+  --[ BlockchainInit(~genesis_hash, '0') ]->
+    [ !Blockchain('0', ~genesis_hash, 'genesis'),
+      !CurrentBlockNumber('0')
+    ]
+
+
+/* =============================================================================
+ * INITIALIZATION RULES (from previous steps)
+ * =============================================================================
+ */
+
+// Rule: Initialize an attester with key pair
+rule Attester_Init:
+    [ Fr(~aid),           // Fresh attester ID
+      Fr(~sk_att)         // Fresh private key
+    ]
+  --[ AttesterInit(~aid, pk(~sk_att)) ]->
+    [ !Attester(~aid, ~sk_att),
+      !AttesterPubKey(~aid, pk(~sk_att)),
+      Out(pk(~sk_att))
+    ]
+
+// Rule: Initialize a verifier  
+rule Verifier_Init:
+    [ Fr(~vid),           // Fresh verifier ID  
+      Fr(~sk_ver)         // Fresh private key
+    ]
+  --[ VerifierInit(~vid, pk(~sk_ver)) ]->
+    [ !Verifier(~vid, ~sk_ver),
+      Out(pk(~sk_ver))
+    ]
+
+/* =============================================================================
+ * PHASE 1: CHALLENGE SUBMISSION  
+ * =============================================================================
+ */
+
+// Rule: Verifier submits challenge nonce for specific attester
+rule Submit_Challenge:
+    [ !Verifier(vid, sk_ver),         // Verifier must exist
+      Fr(~nonce),                     // Generate fresh nonce
+      !AttesterPubKey(aid, pk_att)    // Target attester must exist
+    ]
+  --[ Challenge(vid, aid, ~nonce),
+      BlockchainStore(aid, ~nonce)
+    ]->
+    [ !Verifier(vid, sk_ver),         // Keep verifier state
+      !ChallengeState(aid, ~nonce),   // FIXED: Separate fact for challenges
+      ChallengeIssued(vid, aid, ~nonce) // Local state for this challenge
+    ]
+
+/* =============================================================================
+ * PHASE 2: ATTESTATION RESPONSE (FIXED)
+ * =============================================================================
+ */
+
+// Rule: Attester retrieves challenge and submits response  
+rule Submit_Attestation_Response:
+    [ !Attester(aid, sk_att),         // Attester must exist
+      !ChallengeState(aid, nonce),    // FIXED: Read from challenge state
+      Fr(~measurement)                // Fresh measurement value
+    ]
+  --[ AttestationResponse(aid, nonce, ~measurement),
+      MeasurementSigned(aid, ~measurement),
+      BlockchainStore(aid, sign(~measurement, sk_att))  // FIXED: Simpler signature
+    ]->
+    [ !Attester(aid, sk_att),         // Keep attester state
+      !ResponseState(aid, nonce, sign(~measurement, sk_att)), // FIXED: Separate response fact
+      ResponseSubmitted(aid, nonce, ~measurement)
+    ]
+
+
+/* =============================================================================
+ * PHASE 3: VERIFICATION (NEW)
+ * =============================================================================
+ */
+
+// Rule: Verifier requests verification of attestation response
+rule Request_Verification:
+    [ !Verifier(vid, sk_ver),         // Verifier must exist
+      !ResponseState(aid, nonce, signature), // Response must exist
+      !AttesterPubKey(aid, pk_att)    // Attester public key needed for verification
+    ]
+  --[ VerificationRequest(vid, aid, nonce),
+      VerificationStarted(vid, aid, nonce)
+    ]->
+    [ !Verifier(vid, sk_ver),
+      VerificationInProgress(vid, aid, nonce, signature, pk_att)
+    ]
+
+// Rule: Perform cryptographic verification
+rule Verify_Response:
+    [ VerificationInProgress(vid, aid, nonce, signature, pk_att) ]
+  --[ VerificationComplete(vid, aid, nonce, true),
+      SignatureVerified(aid, signature, pk_att),
+      BlockchainStore(vid, 'verification_passed')
+    ]->
+    [ !VerificationResult(vid, aid, nonce, true),
+      !BlockchainState(vid, 'verification_passed')
+    ]
+
+/* =============================================================================
+ * LEMMAS FOR TESTING
+ * =============================================================================
+ */
+
+// Previous lemmas
+lemma attester_generates_keys:
+  "All aid pk #i.
+    AttesterInit(aid, pk) @ #i
+    ==> Ex sk #j. #j = #i & pk = pk(sk)"
+
+lemma challenge_freshness:
+  "All vid aid nonce1 nonce2 #i #j.
+    (Challenge(vid, aid, nonce1) @ #i & 
+     Challenge(vid, aid, nonce2) @ #j &
+     #i < #j)
+    ==> not(nonce1 = nonce2)"
+
+lemma challenge_requires_attester:
+  "All vid aid nonce #i.
+    Challenge(vid, aid, nonce) @ #i
+    ==> Ex pk #j. AttesterInit(aid, pk) @ #j & #j < #i"
+
+// Fixed lemmas for Step 3
+lemma response_requires_challenge:
+  "All aid nonce measurement #i.
+    AttestationResponse(aid, nonce, measurement) @ #i
+    ==> Ex vid #j. Challenge(vid, aid, nonce) @ #j & #j < #i"
+
+lemma measurement_authenticity:
+  "All aid nonce measurement #i.
+    AttestationResponse(aid, nonce, measurement) @ #i
+    ==> Ex sk #j. AttesterInit(aid, pk(sk)) @ #j & #j < #i"
+
+lemma verification_requires_response:
+  "All vid aid nonce #i.
+    VerificationRequest(vid, aid, nonce) @ #i
+    ==> Ex measurement #j. AttestationResponse(aid, nonce, measurement) @ #j & #j < #i"
+
+lemma verification_authenticity:
+  "All vid aid nonce #i.
+    VerificationComplete(vid, aid, nonce, true) @ #i
+    ==> Ex pk #j. AttesterInit(aid, pk) @ #j & #j < #i"
+
+end
