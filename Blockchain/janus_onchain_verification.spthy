@@ -1,15 +1,14 @@
 /*
- * Janus Attestation Protocol - Step 3: Fixed Attestation Response
- * Using separate facts for challenges vs responses to avoid saturation issues
+ * Janus On-chain Attestation Protocol
  */
 
-theory JanusAttestation_Step3
+theory JanusAttestationOnChain
 begin
 
 builtins: hashing, signing
 
 /* =============================================================================
- * BLOCKCHAIN INFRASTRUCTURE (NEW)
+ * BLOCKCHAIN INFRASTRUCTURE
  * =============================================================================
  */
 
@@ -21,9 +20,25 @@ rule Blockchain_Init:
       !CurrentBlockNumber('0')
     ]
 
+// Rule: Mine/validate a new block (simplified consensus)
+rule Mine_Block:
+    [ !CurrentBlockNumber(prev_block_num),
+      !Blockchain(prev_block_num, prev_hash, prev_content),
+      Fr(~new_block_num),
+      Fr(~new_hash),
+      PendingTransaction(tx_id, tx_content)
+    ]
+  --[ BlockMined(~new_block_num, ~new_hash),
+      TransactionInBlock(tx_id, ~new_block_num),
+      BlockchainOrder(prev_block_num, ~new_block_num)
+    ]->
+    [ !Blockchain(~new_block_num, ~new_hash, tx_content),
+      !CurrentBlockNumber(~new_block_num),
+      !TransactionRecord(tx_id, ~new_block_num, tx_content)
+    ]
 
 /* =============================================================================
- * INITIALIZATION RULES (from previous steps)
+ * INITIALIZATION RULES
  * =============================================================================
  */
 
@@ -49,7 +64,7 @@ rule Verifier_Init:
     ]
 
 /* =============================================================================
- * PHASE 1: CHALLENGE SUBMISSION  
+ * PHASE 1: CHALLENGE SUBMISSION
  * =============================================================================
  */
 
@@ -57,64 +72,71 @@ rule Verifier_Init:
 rule Submit_Challenge:
     [ !Verifier(vid, sk_ver),         // Verifier must exist
       Fr(~nonce),                     // Generate fresh nonce
-      !AttesterPubKey(aid, pk_att)    // Target attester must exist
+      !AttesterPubKey(aid, pk_att),   // Target attester must exist
+      Fr(~tx_id)                      // Generate fresh transaction ID
     ]
   --[ Challenge(vid, aid, ~nonce),
-      BlockchainStore(aid, ~nonce)
+      TransactionSubmitted(~tx_id, 'challenge'),
+      BlockchainTxOrder(~tx_id)       // NEW: Track transaction ordering
     ]->
-    [ !Verifier(vid, sk_ver),         // Keep verifier state
-      !ChallengeState(aid, ~nonce),   // FIXED: Separate fact for challenges
-      ChallengeIssued(vid, aid, ~nonce) // Local state for this challenge
+    [ !Verifier(vid, sk_ver),         
+      !ChallengeState(aid, ~nonce),   
+      ChallengeIssued(vid, aid, ~nonce),
+      PendingTransaction(~tx_id, <'challenge', vid, aid, ~nonce>) // NEW: Pending blockchain transaction
     ]
 
 /* =============================================================================
- * PHASE 2: ATTESTATION RESPONSE (FIXED)
+ * PHASE 2: ATTESTATION RESPONSE (ENHANCED WITH BLOCKCHAIN TXNS)
  * =============================================================================
  */
 
 // Rule: Attester retrieves challenge and submits response  
 rule Submit_Attestation_Response:
-    [ !Attester(aid, sk_att),         // Attester must exist
-      !ChallengeState(aid, nonce),    // FIXED: Read from challenge state
-      Fr(~measurement)                // Fresh measurement value
+    [ !Attester(aid, sk_att),         
+      !ChallengeState(aid, nonce),    
+      Fr(~measurement),               
+      Fr(~tx_id)                      // NEW: Generate fresh transaction ID
     ]
   --[ AttestationResponse(aid, nonce, ~measurement),
       MeasurementSigned(aid, ~measurement),
-      BlockchainStore(aid, sign(~measurement, sk_att))  // FIXED: Simpler signature
+      TransactionSubmitted(~tx_id, 'attestation'), // NEW: Track transaction type
+      BlockchainTxOrder(~tx_id)       // NEW: Track transaction ordering
     ]->
-    [ !Attester(aid, sk_att),         // Keep attester state
-      !ResponseState(aid, nonce, sign(~measurement, sk_att)), // FIXED: Separate response fact
-      ResponseSubmitted(aid, nonce, ~measurement)
+    [ !Attester(aid, sk_att),         
+      !ResponseState(aid, nonce, sign(~measurement, sk_att)), 
+      ResponseSubmitted(aid, nonce, ~measurement),
+      PendingTransaction(~tx_id, <'attestation', aid, nonce, sign(~measurement, sk_att)>) // NEW: Pending transaction
     ]
 
-
 /* =============================================================================
- * PHASE 3: VERIFICATION (NEW)
+ * PHASE 3: VERIFICATION 
  * =============================================================================
  */
 
 // Rule: Verifier requests verification of attestation response
 rule Request_Verification:
-    [ !Verifier(vid, sk_ver),         // Verifier must exist
-      !ResponseState(aid, nonce, signature), // Response must exist
-      !AttesterPubKey(aid, pk_att)    // Attester public key needed for verification
+    [ !Verifier(vid, sk_ver),         
+      !ResponseState(aid, nonce, signature), 
+      !AttesterPubKey(aid, pk_att),
+      Fr(~tx_id)                      // NEW: Generate fresh transaction ID
     ]
   --[ VerificationRequest(vid, aid, nonce),
-      VerificationStarted(vid, aid, nonce)
+      VerificationStarted(vid, aid, nonce),
+      TransactionSubmitted(~tx_id, 'verification'), // NEW: Track transaction type
+      BlockchainTxOrder(~tx_id)       // NEW: Track transaction ordering
     ]->
     [ !Verifier(vid, sk_ver),
-      VerificationInProgress(vid, aid, nonce, signature, pk_att)
+      VerificationInProgress(vid, aid, nonce, signature, pk_att),
+      PendingTransaction(~tx_id, <'verification', vid, aid, nonce>) // NEW: Pending transaction
     ]
 
 // Rule: Perform cryptographic verification
 rule Verify_Response:
     [ VerificationInProgress(vid, aid, nonce, signature, pk_att) ]
   --[ VerificationComplete(vid, aid, nonce, true),
-      SignatureVerified(aid, signature, pk_att),
-      BlockchainStore(vid, 'verification_passed')
+      SignatureVerified(aid, signature, pk_att)
     ]->
-    [ !VerificationResult(vid, aid, nonce, true),
-      !BlockchainState(vid, 'verification_passed')
+    [ !VerificationResult(vid, aid, nonce, true)
     ]
 
 /* =============================================================================
@@ -122,7 +144,6 @@ rule Verify_Response:
  * =============================================================================
  */
 
-// Previous lemmas
 lemma attester_generates_keys:
   "All aid pk #i.
     AttesterInit(aid, pk) @ #i
@@ -160,5 +181,22 @@ lemma verification_authenticity:
   "All vid aid nonce #i.
     VerificationComplete(vid, aid, nonce, true) @ #i
     ==> Ex pk #j. AttesterInit(aid, pk) @ #j & #j < #i"
+
+lemma transaction_ordering:
+  "All tx_id1 tx_id2 #i #j.
+    (BlockchainTxOrder(tx_id1) @ #i & 
+     BlockchainTxOrder(tx_id2) @ #j &
+     #i < #j)
+    ==> not(tx_id1 = tx_id2)"
+
+lemma blockchain_initialization:
+  "All block_num hash #i.
+    BlockchainInit(hash, block_num) @ #i
+    ==> block_num = '0'"
+
+lemma transaction_in_blockchain:
+  "All tx_id block_num #i.
+    TransactionInBlock(tx_id, block_num) @ #i
+    ==> Ex #j. BlockchainTxOrder(tx_id) @ #j & #j < #i"
 
 end

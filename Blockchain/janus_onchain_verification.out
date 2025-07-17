@@ -1,0 +1,392 @@
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+theory JanusAttestationOnChain begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
+
+
+
+
+
+rule (modulo E) Blockchain_Init:
+   [ Fr( ~genesis_hash ) ]
+  --[ BlockchainInit( ~genesis_hash, '0' ) ]->
+   [
+   !Blockchain( '0', ~genesis_hash, 'genesis' ), !CurrentBlockNumber( '0' )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Mine_Block:
+   [
+   !CurrentBlockNumber( prev_block_num ),
+   !Blockchain( prev_block_num, prev_hash, prev_content ),
+   Fr( ~new_block_num ), Fr( ~new_hash ),
+   PendingTransaction( tx_id, tx_content )
+   ]
+  --[
+  BlockMined( ~new_block_num, ~new_hash ),
+  TransactionInBlock( tx_id, ~new_block_num ),
+  BlockchainOrder( prev_block_num, ~new_block_num )
+  ]->
+   [
+   !Blockchain( ~new_block_num, ~new_hash, tx_content ),
+   !CurrentBlockNumber( ~new_block_num ),
+   !TransactionRecord( tx_id, ~new_block_num, tx_content )
+   ]
+
+  // loop breakers: [0,1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Attester_Init:
+   [ Fr( ~aid ), Fr( ~sk_att ) ]
+  --[ AttesterInit( ~aid, pk(~sk_att) ) ]->
+   [
+   !Attester( ~aid, ~sk_att ), !AttesterPubKey( ~aid, pk(~sk_att) ),
+   Out( pk(~sk_att) )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Verifier_Init:
+   [ Fr( ~vid ), Fr( ~sk_ver ) ]
+  --[ VerifierInit( ~vid, pk(~sk_ver) ) ]->
+   [ !Verifier( ~vid, ~sk_ver ), Out( pk(~sk_ver) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Submit_Challenge:
+   [
+   !Verifier( vid, sk_ver ), Fr( ~nonce ), !AttesterPubKey( aid, pk_att ),
+   Fr( ~tx_id )
+   ]
+  --[
+  Challenge( vid, aid, ~nonce ),
+  TransactionSubmitted( ~tx_id, 'challenge' ), BlockchainTxOrder( ~tx_id )
+  ]->
+   [
+   !Verifier( vid, sk_ver ), !ChallengeState( aid, ~nonce ),
+   ChallengeIssued( vid, aid, ~nonce ),
+   PendingTransaction( ~tx_id, <'challenge', vid, aid, ~nonce> )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Submit_Attestation_Response:
+   [
+   !Attester( aid, sk_att ), !ChallengeState( aid, nonce ),
+   Fr( ~measurement ), Fr( ~tx_id )
+   ]
+  --[
+  AttestationResponse( aid, nonce, ~measurement ),
+  MeasurementSigned( aid, ~measurement ),
+  TransactionSubmitted( ~tx_id, 'attestation' ),
+  BlockchainTxOrder( ~tx_id )
+  ]->
+   [
+   !Attester( aid, sk_att ),
+   !ResponseState( aid, nonce, sign(~measurement, sk_att) ),
+   ResponseSubmitted( aid, nonce, ~measurement ),
+   PendingTransaction( ~tx_id,
+                       <'attestation', aid, nonce, sign(~measurement, sk_att)>
+   )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Request_Verification:
+   [
+   !Verifier( vid, sk_ver ), !ResponseState( aid, nonce, signature ),
+   !AttesterPubKey( aid, pk_att ), Fr( ~tx_id )
+   ]
+  --[
+  VerificationRequest( vid, aid, nonce ),
+  VerificationStarted( vid, aid, nonce ),
+  TransactionSubmitted( ~tx_id, 'verification' ),
+  BlockchainTxOrder( ~tx_id )
+  ]->
+   [
+   !Verifier( vid, sk_ver ),
+   VerificationInProgress( vid, aid, nonce, signature, pk_att ),
+   PendingTransaction( ~tx_id, <'verification', vid, aid, nonce> )
+   ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Verify_Response:
+   [ VerificationInProgress( vid, aid, nonce, signature, pk_att ) ]
+  --[
+  VerificationComplete( vid, aid, nonce, true ),
+  SignatureVerified( aid, signature, pk_att )
+  ]->
+   [ !VerificationResult( vid, aid, nonce, true ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma attester_generates_keys:
+  all-traces
+  "∀ aid pk #i.
+    (AttesterInit( aid, pk ) @ #i) ⇒ (∃ sk #j. (#j = #i) ∧ (pk = pk(sk)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ aid pk #i.
+  (AttesterInit( aid, pk ) @ #i) ∧ ∀ sk #j. (#j = #i) ∧ (pk = pk(sk)) ⇒ ⊥"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma challenge_freshness:
+  all-traces
+  "∀ vid aid nonce1 nonce2 #i #j.
+    (((Challenge( vid, aid, nonce1 ) @ #i) ∧
+      (Challenge( vid, aid, nonce2 ) @ #j)) ∧
+     (#i < #j)) ⇒
+    (¬(nonce1 = nonce2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ vid aid nonce1 nonce2 #i #j.
+  (Challenge( vid, aid, nonce1 ) @ #i) ∧
+  (Challenge( vid, aid, nonce2 ) @ #j)
+ ∧
+  (#i < #j) ∧ (nonce1 = nonce2)"
+*/
+simplify
+by contradiction /* cyclic */
+
+lemma challenge_requires_attester:
+  all-traces
+  "∀ vid aid nonce #i.
+    (Challenge( vid, aid, nonce ) @ #i) ⇒
+    (∃ pk #j. (AttesterInit( aid, pk ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ vid aid nonce #i.
+  (Challenge( vid, aid, nonce ) @ #i)
+ ∧
+  ∀ pk #j. (AttesterInit( aid, pk ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( !AttesterPubKey( aid, pk_att ) ▶₂ #i )
+  case Attester_Init
+  by contradiction /* from formulas */
+qed
+
+lemma response_requires_challenge:
+  all-traces
+  "∀ aid nonce measurement #i.
+    (AttestationResponse( aid, nonce, measurement ) @ #i) ⇒
+    (∃ vid #j. (Challenge( vid, aid, nonce ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ aid nonce measurement #i.
+  (AttestationResponse( aid, nonce, measurement ) @ #i)
+ ∧
+  ∀ vid #j. (Challenge( vid, aid, nonce ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( !ChallengeState( aid, nonce ) ▶₁ #i )
+  case Submit_Challenge
+  by contradiction /* from formulas */
+qed
+
+lemma measurement_authenticity:
+  all-traces
+  "∀ aid nonce measurement #i.
+    (AttestationResponse( aid, nonce, measurement ) @ #i) ⇒
+    (∃ sk #j. (AttesterInit( aid, pk(sk) ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ aid nonce measurement #i.
+  (AttestationResponse( aid, nonce, measurement ) @ #i)
+ ∧
+  ∀ sk #j. (AttesterInit( aid, pk(sk) ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( !ChallengeState( aid, nonce ) ▶₁ #i )
+  case Submit_Challenge
+  by contradiction /* from formulas */
+qed
+
+lemma verification_requires_response:
+  all-traces
+  "∀ vid aid nonce #i.
+    (VerificationRequest( vid, aid, nonce ) @ #i) ⇒
+    (∃ measurement #j.
+      (AttestationResponse( aid, nonce, measurement ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ vid aid nonce #i.
+  (VerificationRequest( vid, aid, nonce ) @ #i)
+ ∧
+  ∀ measurement #j.
+   (AttestationResponse( aid, nonce, measurement ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( !ResponseState( aid, nonce, signature ) ▶₁ #i )
+  case Submit_Attestation_Response
+  by contradiction /* from formulas */
+qed
+
+lemma verification_authenticity:
+  all-traces
+  "∀ vid aid nonce #i.
+    (VerificationComplete( vid, aid, nonce, true ) @ #i) ⇒
+    (∃ pk #j. (AttesterInit( aid, pk ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ vid aid nonce #i.
+  (VerificationComplete( vid, aid, nonce, true ) @ #i)
+ ∧
+  ∀ pk #j. (AttesterInit( aid, pk ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( VerificationInProgress( vid, aid, nonce, signature, pk_att
+       ) ▶₀ #i )
+  case Request_Verification
+  by contradiction /* from formulas */
+qed
+
+lemma transaction_ordering:
+  all-traces
+  "∀ tx_id1 tx_id2 #i #j.
+    (((BlockchainTxOrder( tx_id1 ) @ #i) ∧
+      (BlockchainTxOrder( tx_id2 ) @ #j)) ∧
+     (#i < #j)) ⇒
+    (¬(tx_id1 = tx_id2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ tx_id1 tx_id2 #i #j.
+  (BlockchainTxOrder( tx_id1 ) @ #i) ∧ (BlockchainTxOrder( tx_id2 ) @ #j)
+ ∧
+  (#i < #j) ∧ (tx_id1 = tx_id2)"
+*/
+simplify
+solve( BlockchainTxOrder( tx_id1 ) @ #i )
+  case Request_Verification
+  solve( !ResponseState( aid, nonce, signature ) ▶₁ #i )
+    case Submit_Attestation_Response
+    solve( !AttesterPubKey( ~aid, pk_att ) ▶₂ #i )
+      case Attester_Init
+      solve( BlockchainTxOrder( ~tx_id ) @ #j )
+        case Request_Verification
+        by contradiction /* cyclic */
+      qed
+    qed
+  qed
+next
+  case Submit_Attestation_Response
+  solve( !ChallengeState( aid, nonce ) ▶₁ #i )
+    case Submit_Challenge
+    solve( BlockchainTxOrder( ~tx_id ) @ #j )
+      case Submit_Attestation_Response
+      by contradiction /* cyclic */
+    qed
+  qed
+next
+  case Submit_Challenge
+  solve( !AttesterPubKey( aid, pk_att ) ▶₂ #i )
+    case Attester_Init
+    solve( BlockchainTxOrder( ~tx_id ) @ #j )
+      case Submit_Challenge
+      by contradiction /* cyclic */
+    qed
+  qed
+qed
+
+lemma blockchain_initialization:
+  all-traces
+  "∀ block_num hash #i.
+    (BlockchainInit( hash, block_num ) @ #i) ⇒ (block_num = '0')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ block_num hash #i.
+  (BlockchainInit( hash, block_num ) @ #i) ∧ ¬(block_num = '0')"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma transaction_in_blockchain:
+  all-traces
+  "∀ tx_id block_num #i.
+    (TransactionInBlock( tx_id, block_num ) @ #i) ⇒
+    (∃ #j. (BlockchainTxOrder( tx_id ) @ #j) ∧ (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ tx_id block_num #i.
+  (TransactionInBlock( tx_id, block_num ) @ #i)
+ ∧
+  ∀ #j. (BlockchainTxOrder( tx_id ) @ #j) ⇒ ¬(#j < #i)"
+*/
+simplify
+solve( PendingTransaction( tx_id, tx_content ) ▶₄ #i )
+  case Request_Verification
+  by contradiction /* from formulas */
+next
+  case Submit_Attestation_Response
+  by contradiction /* from formulas */
+next
+  case Submit_Challenge
+  by contradiction /* from formulas */
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 2.7.1
+Git revision: UNKNOWN, branch: UNKNOWN
+Compiled at: 2023-08-30 13:15:41.590881948 UTC
+*/
+
+end
+
+==============================================================================
+summary of summaries:
+
+analyzed: janus_onchain_verification.spthy
+
+  processing time: 0.33s
+  
+  attester_generates_keys (all-traces): verified (2 steps)
+  challenge_freshness (all-traces): verified (2 steps)
+  challenge_requires_attester (all-traces): verified (3 steps)
+  response_requires_challenge (all-traces): verified (3 steps)
+  measurement_authenticity (all-traces): verified (3 steps)
+  verification_requires_response (all-traces): verified (3 steps)
+  verification_authenticity (all-traces): verified (3 steps)
+  transaction_ordering (all-traces): verified (12 steps)
+  blockchain_initialization (all-traces): verified (2 steps)
+  transaction_in_blockchain (all-traces): verified (5 steps)
+
+==============================================================================
