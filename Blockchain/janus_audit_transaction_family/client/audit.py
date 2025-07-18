@@ -34,7 +34,7 @@ import sys
 import traceback
 import json
 import janus_audit_pb2
-
+import hashlib
 
 from decimal import Decimal
 from colorlog import ColoredFormatter
@@ -110,7 +110,7 @@ def create_parser(prog_name):
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
     subparsers.required = True
 
-    submit_audit_credential_subparser = subparsers.add_parser('credentials',
+    submit_audit_credential_subparser = subparsers.add_parser('credential',
                                            help='submit audit credential',
                                            parents=[parent_parser])
 
@@ -158,10 +158,15 @@ def _hash(data):
     return hashlib.sha512(data).hexdigest()
 
 def _calculateCredential(aid, vid, is_attester):
+    prefix = ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid
     if is_attester:
-        return _hash(_hash(ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid + VERIFIER_KS) + ATTESTER_KG)
+        data1 = prefix + VERIFIER_KS
+        digest1 = _hash(data1.encode())
+        return _hash(digest1 + ATTESTER_KG)
     else:
-        return _hash(_hash(ATTESTER_MEASUREMENT + VERIFIER_MEASUREMENT + aid + vid + ATTESTER_KS) + VERIFIER_KG)
+        data2 = prefix + ATTESTER_KS
+        digest2 = _hash(data2.encode())
+        return _hash(digest2 + VERIFIER_KG)
 
 def construct_audit_credential(nonce, aid, vid, is_attester):
     cred = _calculateCredential(aid, vid, is_attester)

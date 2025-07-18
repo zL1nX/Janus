@@ -33,6 +33,7 @@ import os
 import cbor
 import logging
 from Crypto.Cipher import AES
+from Crypto.Util import Counter
 
 from sawtooth_sdk.protobuf import events_pb2
 from sawtooth_signing import create_context
@@ -128,10 +129,11 @@ class AttestationClient(object):
     def generate_encrypted_payload(self, nonce):
         # sign the measurement and AES encrypt
         sig = self.att_signer.sign(G_MEASUREMENT)
-        cipher = AES.new(self.communication_key, AES.MODE_CTR)
+        counter = Counter.new(128)
+        cipher = AES.new(self.communication_key, AES.MODE_CTR, counter=counter)
         plain = nonce + G_MEASUREMENT + bytes.fromhex(sig)
         c = cipher.encrypt(plain)
-        ret = cipher.nonce.hex() + c.hex()
+        ret = c.hex()
         LOGGER.info(ret)
 
         return ret

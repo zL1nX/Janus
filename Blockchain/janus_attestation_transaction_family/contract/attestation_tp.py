@@ -31,6 +31,7 @@ import logging
 from time import process_time
 import cbor
 from Crypto.Cipher import AES
+from Crypto.Util import Counter
 
 from sawtooth_signing import create_context
 from sawtooth_signing import CryptoFactory
@@ -188,7 +189,8 @@ def verify_response(context, aidlist):
     return json.dumps(verify_results)
 
 def verify_measurement(cipher_bytes, aid):
-    test_cipher = AES.new(ATT_COMM_KEY, AES.MODE_CTR, nonce=cipher_bytes[:8])
+    counter = Counter.new(128)
+    test_cipher = AES.new(ATT_COMM_KEY, AES.MODE_CTR, counter=counter)
     test_plain = test_cipher.decrypt(cipher_bytes[8:])
     meas, test_sig = test_plain[8:24], test_plain[24:]
 
