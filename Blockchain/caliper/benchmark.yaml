@@ -1,0 +1,18 @@
+# 基准测试名称
+name: "Attestation Benchmark"
+# 基准测试描述
+description: "Benchmark for attestation smart contract"
+# 工作节点数量
+workers:
+  number: 1
+# 测试轮次配置
+rounds:
+  - label: "attestation-round"
+    description: "Test attestation performance"
+    txNumber: 100  # 每轮发送的交易数量
+    rateControl:
+      type: "fixed-rate"  # 速率控制类型，固定速率
+      opts:
+        tps: 10  # 每秒发送的交易数量
+    workload:
+      module: "./workload.js"  # 工作负载模块路径

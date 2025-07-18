@@ -1,0 +1,6 @@
+caliper:
+  sut: sawtooth
+sawtooth:
+  family: "attestation"
+  version: "1.0.0"
+  restApiUrl: "http://rest-api:8008"
